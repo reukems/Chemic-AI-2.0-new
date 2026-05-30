@@ -2,153 +2,154 @@ import { create } from 'zustand';
 import { CHEMICAL_REGISTRY, REACTION_RULES } from '../data/ChemicalRegistry';
 
 export interface Container {
-    id: string;
-    x: number; // Percentage 0-100 across the workbench
-    y: number; // Base level height
-    chemicalId: string | null; // null if empty
-    volume: number; // 0.0 to 1.0 (100%)
-    temperature: number; // Celsius
-    color: string; // Current color (blended or exact)
+    id: number;
+    volume: number; // 0.0 to 100.0
+    maxVol: number;
+    color: { r: number, g: number, b: number };
+    contents: Record<string, number>; // map of chemical ID to volume in this beaker
+    ph: number;
 }
 
 interface SimulationState {
-    containers: Container[];
-    activeEffect: 'bubbles' | 'smoke' | 'fire' | 'explosion' | null;
-    activeEffectContainerId: string | null;
+    env: { temp: number; pressure: number };
+    beakers: Container[];
+    activeEffect: 'bubbles' | 'smoke' | 'fire' | 'explosion' | 'fizz' | 'cloud' | null;
+    activeEffectContainerId: number | null;
 
     // Actions
     initialize: () => void;
-    addContainer: (chemicalId: string, x?: number) => void;
-    moveContainer: (id: string, x: number) => void;
-    pour: (sourceId: string, targetId: string) => void;
+    setEnvTemp: (temp: number) => void;
+    setEnvPressure: (pressure: number) => void;
+    addReagentToBeaker: (beakerId: number, reagentId: string) => void;
+    flushAll: () => void;
     clearEffect: () => void;
-    resetLab: () => void;
-
-    // Drag and Drop
-    draggedContainerId: string | null;
-    setDraggedContainer: (id: string | null) => void;
-    mergeContainers: (sourceId: string, targetId: string) => void;
 }
 
-const STARTING_CONTAINERS: Container[] = [
-    { id: 'beaker-1', x: 30, y: 0, chemicalId: 'H2O', volume: 0.5, temperature: 25, color: CHEMICAL_REGISTRY['H2O'].color },
-    { id: 'beaker-2', x: 70, y: 0, chemicalId: 'HCl', volume: 0.3, temperature: 25, color: CHEMICAL_REGISTRY['HCl'].color }
+// Convert Hex string to RGB
+const hexToRgb = (hex: string) => {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 0, g: 0, b: 0 };
+};
+
+const STARTING_BEAKERS: Container[] = [
+    { id: 0, volume: 0, maxVol: 100, color: {r:0, g:0, b:0}, contents: {}, ph: 7 },
+    { id: 1, volume: 0, maxVol: 100, color: {r:0, g:0, b:0}, contents: {}, ph: 7 },
+    { id: 2, volume: 0, maxVol: 100, color: {r:0, g:0, b:0}, contents: {}, ph: 7 }
 ];
 
 export const useSimulationStore = create<SimulationState>((set, get) => ({
-    containers: [],
+    env: { temp: 25, pressure: 1.0 },
+    beakers: STARTING_BEAKERS,
     activeEffect: null,
     activeEffectContainerId: null,
-    draggedContainerId: null,
 
     initialize: () => {
-        set({ containers: STARTING_CONTAINERS });
+        set({ beakers: JSON.parse(JSON.stringify(STARTING_BEAKERS)), env: { temp: 25, pressure: 1.0 } });
     },
 
-    addContainer: (chemicalId: string, x: number = 50) => {
-        const chem = CHEMICAL_REGISTRY[chemicalId];
-        if (!chem) return;
+    setEnvTemp: (temp: number) => set((state) => ({ env: { ...state.env, temp } })),
+    setEnvPressure: (pressure: number) => set((state) => ({ env: { ...state.env, pressure } })),
 
-        const newContainer: Container = {
-            id: `container-${Date.now()}`,
-            x,
-            y: 0,
-            chemicalId: chemicalId,
-            volume: 0.2, // Default spawn volume
-            temperature: 25,
-            color: chem.color
-        };
-
-        set((state) => ({ containers: [...state.containers, newContainer] }));
-    },
-
-    moveContainer: (id: string, x: number) => {
-        set((state) => ({
-            containers: state.containers.map(c => c.id === id ? { ...c, x } : c)
-        }));
-    },
-
-    pour: (sourceId: string, targetId: string) => {
+    addReagentToBeaker: (beakerId: number, reagentId: string) => {
         const state = get();
-        const source = state.containers.find(c => c.id === sourceId);
-        const target = state.containers.find(c => c.id === targetId);
+        const reagent = CHEMICAL_REGISTRY[reagentId];
+        if (!reagent) return;
 
-        if (!source || !target || !source.chemicalId) return;
-        if (source.volume <= 0) return;
+        const beakers = [...state.beakers];
+        const beaker = { ...beakers.find(b => b.id === beakerId) } as Container;
+        if (!beaker) return;
 
-        // Pour logic (simplified)
-        const pourAmount = Math.min(source.volume, 0.1); // Pour 10% capacity at a time
-        const newSourceVolume = source.volume - pourAmount;
+        const addVol = 20; // 20ml per drop
 
-        // If target is empty, just transfer
-        if (!target.chemicalId) {
-            set((state) => ({
-                containers: state.containers.map(c => {
-                    if (c.id === sourceId) return { ...c, volume: newSourceVolume, chemicalId: newSourceVolume <= 0 ? null : c.chemicalId };
-                    if (c.id === targetId) return { ...c, chemicalId: source.chemicalId, volume: target.volume + pourAmount, color: source.color };
-                    return c;
-                })
-            }));
+        if (beaker.volume >= beaker.maxVol) {
+            console.log("Beaker is FULL!");
             return;
         }
 
-        // Reaction check
-        let resultingChemId = target.chemicalId;
-        let resultingColor = target.color;
-        let newEffect = state.activeEffect;
-        let newEffectContainer = state.activeEffectContainerId;
+        const rColor = hexToRgb(reagent.color);
 
-        // Simple lookup (order independent)
-        const reaction = REACTION_RULES.find(r =>
-            (r.reactants[0] === source.chemicalId && r.reactants[1] === target.chemicalId) ||
-            (r.reactants[1] === source.chemicalId && r.reactants[0] === target.chemicalId)
-        );
-
-        if (reaction) {
-            resultingChemId = reaction.product;
-            resultingColor = reaction.productColor || CHEMICAL_REGISTRY[reaction.product].color;
-            if (reaction.effect) {
-                newEffect = reaction.effect;
-                newEffectContainer = targetId;
-
-                // Auto clear effect after 3s
-                setTimeout(() => {
-                    get().clearEffect();
-                }, 3000);
-            }
+        // 4.1 Optical Color Mixing Algorithm
+        if (beaker.volume === 0) {
+            beaker.color = { ...rColor };
         } else {
-            // No reaction, simple physical blend (averaging hex colors is tricky, simplify for now by keeping target color or picking dominant)
-            // In a real AAA 2D setup, you'd convert to RGB, average, and back to hex.
+            const tVol = beaker.volume + addVol;
+            beaker.color = {
+                r: Math.round((beaker.color.r * beaker.volume + rColor.r * addVol) / tVol),
+                g: Math.round((beaker.color.g * beaker.volume + rColor.g * addVol) / tVol),
+                b: Math.round((beaker.color.b * beaker.volume + rColor.b * addVol) / tVol)
+            };
         }
 
-        set((state) => ({
-            activeEffect: newEffect,
-            activeEffectContainerId: newEffectContainer,
-            containers: state.containers.map(c => {
-                if (c.id === sourceId) return {
-                    ...c,
-                    volume: newSourceVolume,
-                    chemicalId: newSourceVolume <= 0 ? null : c.chemicalId
-                };
-                if (c.id === targetId) return {
-                    ...c,
-                    chemicalId: resultingChemId,
-                    volume: Math.min(1.0, c.volume + pourAmount),
-                    color: resultingColor
-                };
-                return c;
+        beaker.volume += addVol;
+        beaker.contents = { ...beaker.contents, [reagentId]: (beaker.contents[reagentId] || 0) + addVol };
+
+        // Simple pH approximation
+        let totalMolesH = 0;
+        let totalVol = 0;
+        for (const [id, vol] of Object.entries(beaker.contents)) {
+            const rg = CHEMICAL_REGISTRY[id];
+            if (!rg) continue;
+            const hConc = Math.pow(10, -rg.ph);
+            totalMolesH += hConc * vol;
+            totalVol += vol;
+        }
+        const avgHConc = totalMolesH / totalVol;
+        beaker.ph = -Math.log10(avgHConc);
+        if(beaker.ph > 14) beaker.ph = 14;
+        if(beaker.ph < 0) beaker.ph = 0;
+
+        // 4.2 Check for Reactions
+        let newEffect: any = null;
+        const has = (id: string) => beaker.contents[id] > 0;
+
+        // Reaction 1: Acid + Base
+        if (has('HCl') && has('NaOH') && !beaker.contents['reacted_neutral']) {
+            newEffect = 'bubbles';
+            beaker.contents['reacted_neutral'] = 1;
+        }
+
+        // Reaction 2: CuSO4 + NaOH (Copper Hydroxide Precipitate)
+        if (has('COPPER_SULFATE') && has('NaOH') && !beaker.contents['reacted_cuoh']) {
+            beaker.color = {r: 20, g: 60, b: 200}; // Force color to deep blue
+            newEffect = 'cloud';
+            beaker.contents['reacted_cuoh'] = 1;
+        }
+
+        // Phenolphthalein + NaOH
+        if (has('PHENOLPHTHALEIN') && has('NaOH') && !beaker.contents['reacted_pink']) {
+            beaker.color = {r: 244, g: 114, b: 182}; // Force color to pink
+            newEffect = 'fizz';
+            beaker.contents['reacted_pink'] = 1;
+        }
+
+        beakers[beakerId] = beaker;
+
+        set({
+            beakers,
+            ...(newEffect && {
+                activeEffect: newEffect,
+                activeEffectContainerId: beakerId
             })
-        }));
+        });
+
+        if (newEffect) {
+             setTimeout(() => {
+                 get().clearEffect();
+             }, 3000);
+        }
     },
 
-    clearEffect: () => set({ activeEffect: null, activeEffectContainerId: null }),
+    flushAll: () => {
+        set({ beakers: JSON.parse(JSON.stringify(STARTING_BEAKERS)), activeEffect: null, activeEffectContainerId: null });
+    },
 
-    resetLab: () => set({ containers: STARTING_CONTAINERS, activeEffect: null, activeEffectContainerId: null }),
-
-    setDraggedContainer: (id: string | null) => set({ draggedContainerId: id }),
-
-    mergeContainers: (sourceId: string, targetId: string) => {
-        // Just call pour for now to handle the reaction logic
-        get().pour(sourceId, targetId);
-    }
+    clearEffect: () => set({ activeEffect: null, activeEffectContainerId: null })
 }));

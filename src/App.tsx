@@ -1,21 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import LabCanvas from './engine/LabCanvas';
 import UIOverlay from './ui/UIOverlay';
 import { useSimulationStore } from './engine/store';
 
 function App() {
-  const { initialize } = useSimulationStore();
+  const initialize = useSimulationStore(state => state.initialize);
 
-  React.useEffect(() => {
+  useEffect(() => {
     initialize();
   }, [initialize]);
 
   return (
-    <div className="w-screen h-screen relative bg-slate-900 overflow-hidden">
-      {/* 2D Canvas Engine for rendering beakers and reactions */}
+    <div className="w-screen h-screen relative bg-[#0b0f19] overflow-hidden flex flex-col font-sans">
       <LabCanvas />
-
-      {/* UI Overlay for AI Chat, Inventory, and Controls */}
       <UIOverlay />
     </div>
   );
