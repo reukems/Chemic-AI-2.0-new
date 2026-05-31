@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSimulationStore } from '../engine/store';
 
 const MainMenu: React.FC = () => {
@@ -30,107 +30,120 @@ const MainMenu: React.FC = () => {
 
   return (
     <div
-      className="absolute inset-0 z-50 bg-[#0b0f19] text-white flex items-center justify-center overflow-hidden font-sans"
+      className="absolute inset-0 z-50 bg-[#080b13] text-white flex items-center justify-start overflow-hidden font-sans selection:bg-emerald-500/30"
       onMouseMove={handleMouseMove}
     >
-      {/* Background styling / Grid */}
-      <div className="absolute inset-0 opacity-10"
-           style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }}
+      {/* Background vignette & ambient glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#080b13_100%)] pointer-events-none z-10" />
+      <div className="absolute top-0 right-[20%] w-[50vw] h-[50vw] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Grid Pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+          backgroundSize: '60px 60px'
+        }}
       />
 
-      {/* Professor Lucy Interactive Container */}
+      {/* Professor Lucy Interactive Container (Full Bleed AAA Style) */}
       <div
-        className="absolute right-0 bottom-0 h-[90vh] w-[50vw] transition-transform duration-100 ease-out origin-bottom-right"
+        className="absolute right-[-10vw] bottom-[-5vh] h-[110vh] w-[80vw] transition-transform duration-300 ease-out z-0 origin-bottom"
         style={{
-          transform: `translate(${mousePos.x * -20}px, ${mousePos.y * -10}px) rotate(${mousePos.x * 1.5}deg) scale(1.02)`,
+          transform: `translate(${mousePos.x * -30}px, ${mousePos.y * -15}px) rotate(${mousePos.x * 0.5}deg)`,
         }}
       >
         <img
           src="/assets/lucy-transparent.png"
           alt="Professor Lucy"
-          className="object-contain h-full w-full object-right-bottom drop-shadow-[-10px_0_20px_rgba(34,197,94,0.15)] pointer-events-none"
+          className="object-cover h-full w-full object-bottom drop-shadow-[-20px_0_40px_rgba(16,185,129,0.15)] pointer-events-none scale-110"
         />
 
         {/* Head hit box for interaction */}
         <div
           onClick={handleHeadPet}
-          className="absolute top-[10%] left-[35%] w-[30%] h-[30%] cursor-pointer z-50"
-          style={{ borderRadius: '50%' }}
+          className="absolute top-[10%] left-[30%] w-[40%] h-[30%] cursor-pointer z-50 rounded-full"
           title="Pet head"
         />
 
-        {/* Chat Box */}
-        <div className="absolute top-[30%] left-[0%] w-[300px] bg-[#111827]/90 border border-emerald-500/50 rounded-xl p-4 shadow-[0_0_15px_rgba(16,185,129,0.3)] backdrop-blur-md transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-          {/* Chat bubble tail */}
-          <div className="absolute right-[-10px] top-[20px] w-0 h-0 border-t-[10px] border-t-transparent border-l-[10px] border-l-[#111827]/90 border-b-[10px] border-b-transparent z-10"></div>
-          <div className="absolute right-[-12px] top-[19px] w-0 h-0 border-t-[11px] border-t-transparent border-l-[11px] border-l-emerald-500/50 border-b-[11px] border-b-transparent z-0"></div>
-
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-bold text-emerald-400">Prof. Lucy</span>
-            <span className="text-xs text-emerald-500/50 font-mono">AI_CORE_ACTIVE</span>
+        {/* Chat Box / Subtitles */}
+        <div
+          className="absolute top-[45%] left-[-15%] w-[400px] bg-black/60 border-l-4 border-emerald-500 p-6 backdrop-blur-xl transform -translate-y-1/2 pointer-events-none shadow-2xl"
+          style={{ clipPath: 'polygon(0 0, 100% 0, 95% 100%, 0% 100%)' }}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <span className="font-black text-emerald-400 tracking-widest uppercase text-sm">Prof. Lucy</span>
+            <div className="flex-1 h-[1px] bg-emerald-500/30"></div>
           </div>
-          <p className="text-gray-200 text-sm leading-relaxed font-medium">
-            {dialogue}
+          <p className="text-gray-100 text-base leading-relaxed font-medium italic">
+            "{dialogue}"
           </p>
         </div>
       </div>
 
-      <div className="z-10 w-full max-w-5xl px-8 flex flex-col justify-center h-full">
-        <div className="mb-12">
-          {/* Online Indicator */}
-          <div className="flex items-center gap-2 mb-4 text-green-400 font-mono text-sm tracking-widest">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-ping shadow-[0_0_8px_#22c55e]"></div>
-            <span>SYSTEM ONLINE</span>
+      {/* UI Overlay - Left Side */}
+      <div className="z-20 w-full max-w-7xl px-16 flex flex-col justify-center h-full pointer-events-none">
+
+        <div className="w-[45vw] pointer-events-auto">
+          {/* Header */}
+          <div className="mb-16">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-3 h-3 bg-emerald-500 animate-pulse"></div>
+              <span className="text-emerald-500/80 font-mono text-sm tracking-[0.3em] uppercase">System Verified</span>
+            </div>
+
+            <h1 className="text-[6rem] leading-none font-black tracking-tighter mb-4 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+              CHEMIC<span className="text-emerald-500">_</span>AI
+            </h1>
+            <p className="text-gray-400/80 text-xl tracking-widest uppercase font-light border-l-2 border-emerald-500/50 pl-4">
+              Quantum Lab Environment
+            </p>
           </div>
 
-          {/* Title with Gradient Animation */}
-          <h1 className="text-7xl font-black italic tracking-tighter mb-2 bg-gradient-to-r from-[#00ff87] via-[#60efff] to-[#0061ff] text-transparent bg-clip-text animate-[gradient_3s_ease_infinite]"
-              style={{ backgroundSize: '300% auto' }}>
-            CHEMIC-AI
-          </h1>
-          <p className="text-gray-400 text-lg tracking-wide max-w-md">
-            Interactive virtual laboratory environment.
-          </p>
-        </div>
-
-        {/* Navigation Menu */}
-        <div className="flex flex-col gap-4 w-64">
-          <button
-            onClick={handleStart}
-            className="group relative px-6 py-4 bg-emerald-600/20 border border-emerald-500/50 hover:bg-emerald-500/30 hover:border-emerald-400 rounded-lg text-left overflow-hidden transition-all duration-300"
-          >
-            <div className="absolute inset-y-0 left-0 w-1 bg-emerald-500 group-hover:w-2 transition-all"></div>
-            <span className="font-bold text-emerald-100 tracking-wider relative z-10 pl-2">Begin Simulation</span>
-          </button>
-
-          <div className="h-px w-full bg-gray-800 my-2"></div>
-
-          {['Story Mode', 'Database', 'Calibration', 'Research Notes'].map((label) => (
+          {/* Navigation Menu */}
+          <div className="flex flex-col gap-6 w-[400px]">
             <button
-              key={label}
-              onMouseEnter={() => setHoveredButton(label)}
+              onClick={handleStart}
+              onMouseEnter={() => setHoveredButton('START')}
               onMouseLeave={() => setHoveredButton(null)}
-              onClick={handleDisabledClick}
-              className="relative px-6 py-3 border border-transparent hover:border-gray-700 hover:bg-gray-800/50 rounded text-left transition-all overflow-hidden flex items-center justify-between group"
+              className="group relative px-8 py-5 bg-white/5 border border-white/10 hover:bg-emerald-500/20 hover:border-emerald-500/50 rounded-none text-left overflow-hidden transition-all duration-500 backdrop-blur-sm"
             >
-              <span className="text-gray-300 group-hover:text-white transition-colors">{label}</span>
+              <div className="absolute inset-y-0 left-0 w-1 bg-emerald-500 group-hover:w-full transition-all duration-500 ease-out opacity-20 z-0"></div>
 
-              {/* Coming Soon indicator that slides in */}
-              <span className={`text-xs text-yellow-500/80 font-mono bg-yellow-500/10 px-2 py-1 rounded transition-all duration-300 ${hoveredButton === label ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
-                Coming Soon
-              </span>
+              <div className="relative z-10 flex items-center justify-between">
+                <span className="font-black text-2xl text-white tracking-widest uppercase">Start Engine</span>
+                <span className={`font-mono text-emerald-400 transition-opacity duration-300 ${hoveredButton === 'START' ? 'opacity-100' : 'opacity-0'}`}>
+                  [ ENTER ]
+                </span>
+              </div>
             </button>
-          ))}
-        </div>
-      </div>
 
-      <style>{`
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-      `}</style>
+            <div className="flex flex-col gap-2 mt-4 pl-4 border-l border-white/10">
+              {['Story Archives', 'Element Database', 'System Settings', 'Exit Desktop'].map((label, i) => (
+                <button
+                  key={label}
+                  onMouseEnter={() => setHoveredButton(label)}
+                  onMouseLeave={() => setHoveredButton(null)}
+                  onClick={handleDisabledClick}
+                  className="relative px-4 py-3 text-left transition-all overflow-hidden flex items-center justify-between group opacity-60 hover:opacity-100"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs font-mono text-gray-500">0{i+1}</span>
+                    <span className="text-gray-300 font-bold tracking-widest uppercase text-sm group-hover:text-emerald-400 transition-colors">
+                      {label}
+                    </span>
+                  </div>
+
+                  <span className={`text-[10px] text-yellow-500/80 font-mono tracking-widest uppercase transition-all duration-300 ${hoveredButton === label ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+                    Locked
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 };
