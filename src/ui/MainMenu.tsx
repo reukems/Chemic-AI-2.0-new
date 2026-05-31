@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSimulationStore } from '../engine/store';
 
 const MainMenu: React.FC = () => {
   const setAppState = useSimulationStore(state => state.setAppState);
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+
+  // Interactive state
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [dialogue, setDialogue] = useState("System online! Welcome to the Chemic-AI Quantum Engine, Researcher! I'm Professor Lucy. Are we ready to synthesize something amazing today? :3");
 
   const handleStart = () => {
     setAppState('LOADING');
@@ -11,24 +15,64 @@ const MainMenu: React.FC = () => {
 
   const handleDisabledClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    // In a real app we might show a toast, but we can also handle it simply
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    // Calculate mouse position relative to center of screen, from -1 to 1
+    const x = (e.clientX / window.innerWidth - 0.5) * 2;
+    const y = (e.clientY / window.innerHeight - 0.5) * 2;
+    setMousePos({ x, y });
+  };
+
+  const handleHeadPet = () => {
+    setDialogue("W-wait, hey! what are you doing? i didn't allow you to ...b-but I suppose this is fine... just don't mess up my ears! >///<");
   };
 
   return (
-    <div className="absolute inset-0 z-50 bg-[#0b0f19] text-white flex items-center justify-center overflow-hidden font-sans">
+    <div
+      className="absolute inset-0 z-50 bg-[#0b0f19] text-white flex items-center justify-center overflow-hidden font-sans"
+      onMouseMove={handleMouseMove}
+    >
       {/* Background styling / Grid */}
       <div className="absolute inset-0 opacity-10"
            style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }}
       />
 
-      {/* Professor Lucy Image */}
-      <div className="absolute right-0 bottom-0 h-[90vh] w-[50vw] pointer-events-none opacity-90 transition-transform duration-[3s] ease-out hover:scale-105 origin-bottom-right">
-        {/* We use the transparent asset */}
+      {/* Professor Lucy Interactive Container */}
+      <div
+        className="absolute right-0 bottom-0 h-[90vh] w-[50vw] transition-transform duration-100 ease-out origin-bottom-right"
+        style={{
+          transform: `translate(${mousePos.x * -20}px, ${mousePos.y * -10}px) rotate(${mousePos.x * 1.5}deg) scale(1.02)`,
+        }}
+      >
         <img
           src="/assets/lucy-transparent.png"
           alt="Professor Lucy"
-          className="object-contain h-full w-full object-right-bottom drop-shadow-[-10px_0_20px_rgba(34,197,94,0.15)]"
+          className="object-contain h-full w-full object-right-bottom drop-shadow-[-10px_0_20px_rgba(34,197,94,0.15)] pointer-events-none"
         />
+
+        {/* Head hit box for interaction */}
+        <div
+          onClick={handleHeadPet}
+          className="absolute top-[10%] left-[35%] w-[30%] h-[30%] cursor-pointer z-50"
+          style={{ borderRadius: '50%' }}
+          title="Pet head"
+        />
+
+        {/* Chat Box */}
+        <div className="absolute top-[30%] left-[0%] w-[300px] bg-[#111827]/90 border border-emerald-500/50 rounded-xl p-4 shadow-[0_0_15px_rgba(16,185,129,0.3)] backdrop-blur-md transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          {/* Chat bubble tail */}
+          <div className="absolute right-[-10px] top-[20px] w-0 h-0 border-t-[10px] border-t-transparent border-l-[10px] border-l-[#111827]/90 border-b-[10px] border-b-transparent z-10"></div>
+          <div className="absolute right-[-12px] top-[19px] w-0 h-0 border-t-[11px] border-t-transparent border-l-[11px] border-l-emerald-500/50 border-b-[11px] border-b-transparent z-0"></div>
+
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-bold text-emerald-400">Prof. Lucy</span>
+            <span className="text-xs text-emerald-500/50 font-mono">AI_CORE_ACTIVE</span>
+          </div>
+          <p className="text-gray-200 text-sm leading-relaxed font-medium">
+            {dialogue}
+          </p>
+        </div>
       </div>
 
       <div className="z-10 w-full max-w-5xl px-8 flex flex-col justify-center h-full">
@@ -40,8 +84,8 @@ const MainMenu: React.FC = () => {
           </div>
 
           {/* Title with Gradient Animation */}
-          <h1 className="text-7xl font-black italic tracking-tighter mb-2 bg-gradient-to-r from-emerald-400 via-teal-200 to-cyan-400 text-transparent bg-clip-text"
-              style={{ backgroundSize: '200% auto', animation: 'gradient 4s linear infinite' }}>
+          <h1 className="text-7xl font-black italic tracking-tighter mb-2 bg-gradient-to-r from-[#00ff87] via-[#60efff] to-[#0061ff] text-transparent bg-clip-text animate-[gradient_3s_ease_infinite]"
+              style={{ backgroundSize: '300% auto' }}>
             CHEMIC-AI
           </h1>
           <p className="text-gray-400 text-lg tracking-wide max-w-md">
