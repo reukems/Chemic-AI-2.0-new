@@ -134,26 +134,46 @@ const LabContainer: React.FC<LabContainerProps> = ({ id }) => {
                 <div>pH: {container.ph.toFixed(1)}</div>
             </div>
 
-            <div className={`container-glass ${isFlask ? 'flask-glass' : 'beaker-glass'}`}>
-                {/* Volume Markers for Beaker */}
-                {!isFlask && (
+            {!isFlask ? (
+                <>
+                    <div className="container-glass beaker-glass"></div>
                     <div className="volume-markers">
                         <div className="marker marker-100"></div>
                         <div className="marker marker-75"></div>
                         <div className="marker marker-50"></div>
                         <div className="marker marker-25"></div>
                     </div>
-                )}
-                {/* Volume Markers for Flask */}
-                {isFlask && (
+                </>
+            ) : (
+                <>
+                    <svg className="flask-glass" viewBox="0 0 160 220">
+                        <defs>
+                        <linearGradient id="flask-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
+                            <stop offset="15%" stopColor="rgba(255,255,255,0.01)" />
+                            <stop offset="85%" stopColor="rgba(255,255,255,0.01)" />
+                            <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
+                        </linearGradient>
+                        </defs>
+                        {/* Glass Body Outline & Fill */}
+                        <path d="M 56 0 L 104 0 L 104 66 L 156 196 Q 160 206 150 214 Q 140 220 130 220 L 30 220 Q 20 220 10 214 Q 0 206 4 196 L 56 66 Z"
+                            fill="url(#flask-grad)"
+                            stroke="rgba(255,255,255,0.3)"
+                            strokeWidth="3"
+                            strokeLinejoin="round" />
+                        {/* Left Specular Highlight */}
+                        <path d="M 62 2 L 62 66 L 16 181 Q 12 191 22 199"
+                            fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="4"
+                            filter="blur(1px)" />
+                        {/* Lip */}
+                        <rect x="52" y="0" width="56" height="6" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                    </svg>
                     <div className="volume-markers flask-markers">
                         <div className="marker marker-100"></div>
                         <div className="marker marker-50"></div>
                     </div>
-                )}
-            </div>
-
-            <canvas ref={canvasRef} className={`reaction-canvas ${isFlask ? 'flask-canvas' : ''}`}></canvas>
+                </>
+            )}
 
             <div
                 className={`container-liquid ${isFlask ? 'flask-liquid' : 'beaker-liquid'}`}
@@ -165,6 +185,8 @@ const LabContainer: React.FC<LabContainerProps> = ({ id }) => {
                     </svg>
                 )}
             </div>
+
+            <canvas ref={canvasRef} className={`reaction-canvas ${isFlask ? 'flask-canvas' : ''}`}></canvas>
         </div>
     );
 };

@@ -24,7 +24,7 @@ const LabCanvas: React.FC = () => {
 
     return (
         <div
-            className="flex-1 flex items-end justify-center gap-24 relative w-full h-full pb-[15%]"
+            className="flex-1 flex items-end justify-center gap-24 relative w-full h-full pb-[20%]"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >

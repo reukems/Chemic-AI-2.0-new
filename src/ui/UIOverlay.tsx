@@ -52,101 +52,107 @@ const UIOverlay: React.FC = () => {
         <div className="absolute inset-0 pointer-events-none flex flex-col justify-between font-sans overflow-hidden select-none z-50">
 
             {/* Top Left Section: Title Box and Status */}
-            <div className="absolute top-6 left-6 flex flex-col gap-4 pointer-events-auto w-80">
+            <div className="absolute top-4 left-4 flex flex-col gap-3 pointer-events-auto w-64 transform origin-top-left scale-90">
                 {/* Title Box */}
-                <div className="bg-[#1f2335] rounded-xl p-5 shadow-2xl border border-slate-700/50">
-                    <h1 className="text-3xl font-black tracking-wider text-white mb-2 font-mono glow-text">CHEMIC-AI</h1>
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
-                        <span className="text-[10px] text-slate-300 font-bold tracking-widest uppercase">QUANTUM REALITY ENGINE</span>
+                <div className="bg-[#1f2335] rounded-xl p-4 shadow-2xl border border-slate-700/50 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <h1
+                        className="text-3xl font-black tracking-wider mb-1 font-mono relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"
+                        style={{ backgroundSize: '200% 200%', animation: 'rgb-shift 5s ease infinite' }}
+                    >
+                        CHEMIC-AI
+                    </h1>
+                    <div className="flex items-center gap-2 mb-2 relative z-10">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 text-emerald-500" style={{ animation: 'pulse-sync 2s infinite' }}></div>
+                        <span className="text-[9px] text-slate-300 font-bold tracking-widest uppercase">QUANTUM REALITY ENGINE</span>
                     </div>
                 </div>
 
                 {/* Status Bar */}
-                <div className="bg-[#1f2335] rounded-lg px-4 py-3 flex justify-between items-center shadow-lg border border-slate-700/50">
-                    <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">STATUS</span>
+                <div className="bg-[#1f2335] rounded-lg px-3 py-2 flex justify-between items-center shadow-lg border border-slate-700/50">
+                    <span className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">STATUS</span>
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-emerald-500 tracking-widest uppercase">SAFE</span>
-                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span className="text-[9px] font-bold text-emerald-500 tracking-widest uppercase">SAFE</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 text-emerald-500" style={{ animation: 'pulse-sync 2s infinite' }}></div>
                     </div>
                 </div>
 
                  {/* Environment Controls */}
-                 <div className="bg-[#1f2335] rounded-xl p-4 shadow-2xl border border-slate-700/50 flex flex-col gap-3">
-                    <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Environment</h2>
+                 <div className="bg-[#1f2335] rounded-xl p-3 shadow-2xl border border-slate-700/50 flex flex-col gap-2">
+                    <h2 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Environment</h2>
 
                     <div className="flex items-center justify-between text-xs font-mono">
                         <span className="text-slate-300">Temp</span>
-                        <input type="range" className="w-24 mx-2" min="0" max="100" value={env.temp} onChange={(e) => setEnvTemp(Number(e.target.value))} />
-                        <span className="text-cyan-300 w-12 text-right">{env.temp}°C</span>
+                        <input type="range" className="w-20 mx-2" min="0" max="100" value={env.temp} onChange={(e) => setEnvTemp(Number(e.target.value))} />
+                        <span className="text-cyan-300 w-10 text-right">{env.temp}°C</span>
                     </div>
 
                     <div className="flex items-center justify-between text-xs font-mono">
                         <span className="text-slate-300">Pres</span>
-                        <input type="range" className="w-24 mx-2" min="0.1" max="5.0" value={env.pressure} step="0.1" onChange={(e) => setEnvPressure(Number(e.target.value))} />
-                        <span className="text-cyan-300 w-12 text-right">{env.pressure.toFixed(1)} atm</span>
+                        <input type="range" className="w-20 mx-2" min="0.1" max="5.0" value={env.pressure} step="0.1" onChange={(e) => setEnvPressure(Number(e.target.value))} />
+                        <span className="text-cyan-300 w-10 text-right">{env.pressure.toFixed(1)} atm</span>
                     </div>
 
-                    <button onClick={flushAll} className="mt-2 w-full py-1.5 border border-rose-500/50 hover:bg-rose-500/20 text-rose-400 rounded text-[10px] font-bold tracking-wider transition-colors uppercase">
+                    <button onClick={flushAll} className="mt-1 w-full py-1 border border-rose-500/50 hover:bg-rose-500/20 text-rose-400 rounded text-[9px] font-bold tracking-wider transition-colors uppercase">
                         ⚠️ EMERGENCY FLUSH
                     </button>
                 </div>
 
                 {/* Equipment Sidebar (Draggable Containers) */}
-                <div className="bg-[#1f2335] rounded-xl flex flex-col shadow-2xl border border-slate-700/50 overflow-hidden mt-2">
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => setEquipmentOpen(!equipmentOpen)}>
-                        <h2 className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">EQUIPMENT</h2>
-                        <span className="text-slate-400 text-xs">{equipmentOpen ? '▼' : '▶'}</span>
+                <div className="bg-[#1f2335] rounded-xl flex flex-col shadow-2xl border border-slate-700/50 overflow-hidden mt-1">
+                    <div className="px-3 py-2 border-b border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => setEquipmentOpen(!equipmentOpen)}>
+                        <h2 className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">EQUIPMENT</h2>
+                        <span className="text-slate-400 text-[10px]">{equipmentOpen ? '▼' : '▶'}</span>
                     </div>
 
                     {equipmentOpen && (
-                        <div className="p-3 flex flex-col gap-2">
+                        <div className="p-2 flex flex-col gap-1.5">
                             <div
                                 draggable
                                 onDragStart={(e) => {
                                     e.dataTransfer.setData('containerType', 'beaker');
                                 }}
-                                className="reagent-btn flex justify-between items-center p-3 rounded-lg text-left"
+                                className="reagent-btn flex justify-between items-center p-2 rounded-lg text-left"
                             >
-                                <span className="text-sm font-bold text-slate-200">Empty Beaker</span>
-                                <span className="text-xl">🫙</span>
+                                <span className="text-xs font-bold text-slate-200">Empty Beaker</span>
+                                <span className="text-lg">🫙</span>
                             </div>
                             <div
                                 draggable
                                 onDragStart={(e) => {
                                     e.dataTransfer.setData('containerType', 'flask');
                                 }}
-                                className="reagent-btn flex justify-between items-center p-3 rounded-lg text-left"
+                                className="reagent-btn flex justify-between items-center p-2 rounded-lg text-left"
                             >
-                                <span className="text-sm font-bold text-slate-200">Empty Flask</span>
-                                <span className="text-xl">⚗️</span>
+                                <span className="text-xs font-bold text-slate-200">Empty Flask</span>
+                                <span className="text-lg">⚗️</span>
                             </div>
                         </div>
                     )}
                 </div>
 
                 {/* Inventory Sidebar (Now Draggable Reagents) */}
-                <div className="bg-[#1f2335] rounded-xl flex flex-col shadow-2xl border border-slate-700/50 overflow-hidden mt-2">
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => setInventoryOpen(!inventoryOpen)}>
-                        <h2 className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">REAGENTS</h2>
-                        <span className="text-slate-400 text-xs">{inventoryOpen ? '▼' : '▶'}</span>
+                <div className="bg-[#1f2335] rounded-xl flex flex-col shadow-2xl border border-slate-700/50 overflow-hidden mt-1">
+                    <div className="px-3 py-2 border-b border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => setInventoryOpen(!inventoryOpen)}>
+                        <h2 className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">REAGENTS</h2>
+                        <span className="text-slate-400 text-[10px]">{inventoryOpen ? '▼' : '▶'}</span>
                     </div>
 
                     {inventoryOpen && (
-                        <div className="p-3 flex flex-col gap-2 overflow-y-auto custom-scrollbar h-[25vh]">
+                        <div className="p-2 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar h-[20vh]">
                             {Object.values(CHEMICAL_REGISTRY).map(chem => (
                                 <div
                                     key={chem.id}
                                     draggable
                                     onDragStart={(e) => handleDragStart(e, chem.id)}
-                                    className="reagent-btn flex justify-between items-center p-3 rounded-lg text-left"
+                                    className="reagent-btn flex justify-between items-center p-2 rounded-lg text-left"
                                 >
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-bold text-slate-200">{chem.name.EN}</span>
-                                        <span className="text-[10px] text-slate-500 font-mono">{chem.formula}</span>
+                                        <span className="text-xs font-bold text-slate-200">{chem.name.EN}</span>
+                                        <span className="text-[9px] text-slate-500 font-mono">{chem.formula}</span>
                                     </div>
                                     <div
-                                        className="reagent-dot"
+                                        className="reagent-dot !w-4 !h-4"
                                         style={{ color: chem.color, backgroundColor: chem.color }}
                                     />
                                 </div>
@@ -179,7 +185,7 @@ const UIOverlay: React.FC = () => {
                         <div className="flex flex-col">
                             <h2 className="text-sm font-bold text-white">Commlink - PROF. LUCY</h2>
                             <div className="flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.8)]"></div>
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 text-emerald-500" style={{ animation: 'pulse-sync 2s infinite' }}></div>
                                 <span className="text-[9px] font-bold text-emerald-500 tracking-widest uppercase">ONLINE</span>
                             </div>
                         </div>
@@ -232,7 +238,7 @@ const UIOverlay: React.FC = () => {
             {/* Bottom Center Status Bar (System & Node) */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-[#1f2335]/80 backdrop-blur border border-slate-700/50 rounded-full px-6 py-2 shadow-lg pointer-events-auto">
                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 text-emerald-500" style={{ animation: 'pulse-sync 2s infinite' }}></div>
                     <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">[SYSTEM: ONLINE]</span>
                 </div>
                 <div className="w-px h-3 bg-slate-600/50"></div>
