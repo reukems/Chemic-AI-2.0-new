@@ -1,6 +1,7 @@
 import React from 'react';
 import LabContainer from './LabContainer';
 import { useSimulationStore } from './store';
+import PeriodicTableBoard from '../ui/PeriodicTableBoard';
 
 const LabCanvas: React.FC = () => {
     const containers = useSimulationStore(state => state.containers);
@@ -28,14 +29,20 @@ const LabCanvas: React.FC = () => {
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
-            <div className="relative z-10 flex gap-24 items-end">
+            {/* Background 2D Periodic Table Board */}
+            <PeriodicTableBoard />
+
+            <div className="relative z-10 flex gap-24 items-end pointer-events-none">
+                {/* Make containers pointer-events-auto so they can still be interacted with over the board */}
                 {containers.map(c => (
-                    <LabContainer key={c.id} id={c.id} />
+                    <div key={c.id} className="pointer-events-auto">
+                        <LabContainer id={c.id} />
+                    </div>
                 ))}
             </div>
 
             {/* Solid Lab Desk Extending Downwards */}
-            <div className="absolute bottom-0 w-3/4 h-[20%] desk-surface border-t-2 border-slate-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] rounded-t-2xl flex justify-center">
+            <div className="absolute bottom-0 w-3/4 h-[20%] desk-surface border-t-2 border-slate-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] rounded-t-2xl flex justify-center z-10">
                 <div className="w-[95%] h-[2px] bg-cyan-500/30 mt-1"></div>
             </div>
         </div>
