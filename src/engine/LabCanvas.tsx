@@ -1,17 +1,43 @@
 import React from 'react';
-import Beaker from './Beaker';
+import LabContainer from './LabContainer';
 import { useSimulationStore } from './store';
 
 const LabCanvas: React.FC = () => {
-    const beakers = useSimulationStore(state => state.beakers);
+    const containers = useSimulationStore(state => state.containers);
+    const spawnContainer = useSimulationStore(state => state.spawnContainer);
+
+    const handleDragOver = (e: React.DragEvent) => {
+        // Allow dropping containers onto the canvas
+        if (e.dataTransfer.types.includes('containertype')) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        const containerType = e.dataTransfer.getData('containerType');
+        if (containerType === 'beaker' || containerType === 'flask') {
+            e.preventDefault();
+            spawnContainer(containerType);
+        }
+    };
 
     return (
-        <div className="flex-1 flex items-center justify-center gap-24 relative w-full h-full pt-32">
-            {beakers.map(b => (
-                <Beaker key={b.id} id={b.id} />
-            ))}
-            {/* Lab Table Surface Line */}
-            <div className="absolute bottom-[20%] w-2/3 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent shadow-[0_0_10px_rgba(34,211,238,0.5)]"></div>
+        <div
+            className="flex-1 flex items-end justify-center gap-24 relative w-full h-full pb-[15%]"
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+        >
+            <div className="relative z-10 flex gap-24 items-end">
+                {containers.map(c => (
+                    <LabContainer key={c.id} id={c.id} />
+                ))}
+            </div>
+
+            {/* Solid Lab Desk Extending Downwards */}
+            <div className="absolute bottom-0 w-3/4 h-[20%] desk-surface border-t-2 border-slate-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] rounded-t-2xl flex justify-center">
+                <div className="w-[95%] h-[2px] bg-cyan-500/30 mt-1"></div>
+            </div>
         </div>
     );
 };

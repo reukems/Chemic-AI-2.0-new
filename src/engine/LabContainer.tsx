@@ -1,13 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { useSimulationStore } from './store';
 
-interface BeakerProps {
+interface LabContainerProps {
     id: number;
 }
 
-const Beaker: React.FC<BeakerProps> = ({ id }) => {
-    const beaker = useSimulationStore(state => state.beakers.find(b => b.id === id));
-    const addReagentToBeaker = useSimulationStore(state => state.addReagentToBeaker);
+const LabContainer: React.FC<LabContainerProps> = ({ id }) => {
+    const container = useSimulationStore(state => state.containers.find(b => b.id === id));
+    const addReagentToContainer = useSimulationStore(state => state.addReagentToContainer);
     const activeEffect = useSimulationStore(state => state.activeEffect);
     const activeEffectContainerId = useSimulationStore(state => state.activeEffectContainerId);
 
@@ -31,7 +31,7 @@ const Beaker: React.FC<BeakerProps> = ({ id }) => {
         e.currentTarget.classList.remove('drag-over');
         const reagentId = e.dataTransfer.getData('text/plain');
         if (reagentId) {
-            addReagentToBeaker(id, reagentId);
+            addReagentToContainer(id, reagentId);
         }
     };
 
@@ -41,9 +41,9 @@ const Beaker: React.FC<BeakerProps> = ({ id }) => {
             const canvas = canvasRef.current;
             if (!canvas) return;
 
-            const r = beaker?.color.r || 255;
-            const g = beaker?.color.g || 255;
-            const b = beaker?.color.b || 255;
+            const r = container?.color.r || 255;
+            const g = container?.color.g || 255;
+            const b = container?.color.b || 255;
 
             const numParticles = activeEffect === 'fizz' ? 30 : 15;
 
@@ -60,7 +60,7 @@ const Beaker: React.FC<BeakerProps> = ({ id }) => {
                 });
             }
         }
-    }, [activeEffect, activeEffectContainerId, id, beaker?.color]);
+    }, [activeEffect, activeEffectContainerId, id, container?.color]);
 
     // Particle Animation Loop
     useEffect(() => {
@@ -112,35 +112,54 @@ const Beaker: React.FC<BeakerProps> = ({ id }) => {
         };
     }, []);
 
-    if (!beaker) return null;
+    if (!container) return null;
 
-    const heightPct = (beaker.volume / beaker.maxVol) * 90;
-    const rgbaColor = `rgba(${beaker.color.r}, ${beaker.color.g}, ${beaker.color.b}, 0.8)`;
-    const rgbColor = `rgb(${beaker.color.r}, ${beaker.color.g}, ${beaker.color.b})`;
+    const heightPct = (container.volume / container.maxVol) * 90;
+    const rgbaColor = `rgba(${container.color.r}, ${container.color.g}, ${container.color.b}, 0.8)`;
+    const rgbColor = `rgb(${container.color.r}, ${container.color.g}, ${container.color.b})`;
 
-    const label = id === 0 ? 'Alpha' : id === 1 ? 'Beta' : 'Gamma';
+    const label = id === 0 ? 'Alpha' : id === 1 ? 'Beta' : id === 2 ? 'Gamma' : 'Delta';
+    const isFlask = container.type === 'flask';
 
     return (
         <div
-            className="beaker-container"
+            className={`container-wrapper ${isFlask ? 'flask-wrapper' : 'beaker-wrapper'}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
         >
-            <div className="beaker-info font-mono text-center">
-                <div className="font-bold text-cyan-300">Beaker {label}</div>
-                <div>Vol: {beaker.volume} ml</div>
-                <div>pH: {beaker.ph.toFixed(1)}</div>
+            <div className="container-info font-mono text-center">
+                <div className="font-bold text-cyan-300">{isFlask ? 'Flask' : 'Beaker'} {label}</div>
+                <div>Vol: {container.volume} ml</div>
+                <div>pH: {container.ph.toFixed(1)}</div>
             </div>
 
-            <div className="beaker-glass"></div>
-            <canvas ref={canvasRef} className="reaction-canvas"></canvas>
+            <div className={`container-glass ${isFlask ? 'flask-glass' : 'beaker-glass'}`}>
+                {/* Volume Markers for Beaker */}
+                {!isFlask && (
+                    <div className="volume-markers">
+                        <div className="marker marker-100"></div>
+                        <div className="marker marker-75"></div>
+                        <div className="marker marker-50"></div>
+                        <div className="marker marker-25"></div>
+                    </div>
+                )}
+                {/* Volume Markers for Flask */}
+                {isFlask && (
+                    <div className="volume-markers flask-markers">
+                        <div className="marker marker-100"></div>
+                        <div className="marker marker-50"></div>
+                    </div>
+                )}
+            </div>
+
+            <canvas ref={canvasRef} className={`reaction-canvas ${isFlask ? 'flask-canvas' : ''}`}></canvas>
 
             <div
-                className="beaker-liquid"
+                className={`container-liquid ${isFlask ? 'flask-liquid' : 'beaker-liquid'}`}
                 style={{ height: `${heightPct}%`, backgroundColor: rgbaColor }}
             >
-                {beaker.volume > 0 && (
+                {container.volume > 0 && (
                     <svg className="wave-svg" style={{ fill: rgbColor }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 40" preserveAspectRatio="none">
                         <path d="M0,20 Q100,40 200,20 T400,20 T600,20 T800,20 L800,40 L0,40 Z"></path>
                     </svg>
@@ -150,4 +169,4 @@ const Beaker: React.FC<BeakerProps> = ({ id }) => {
     );
 };
 
-export default Beaker;
+export default LabContainer;

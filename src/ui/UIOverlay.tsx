@@ -5,18 +5,19 @@ import { askAkiAssistant } from '../engine/aiService';
 
 const UIOverlay: React.FC = () => {
     const { env, setEnvTemp, setEnvPressure, flushAll } = useSimulationStore();
-    const beakers = useSimulationStore(state => state.beakers);
+    const containers = useSimulationStore(state => state.containers);
 
     // Local state for chat
     const [userInput, setUserInput] = useState("");
-    const [aiResponse, setAiResponse] = useState("Hello! I'm Professor Lucy 🦊! Are you ready to do some science? Just drag and drop chemicals from the inventory to the beakers!");
+    const [aiResponse, setAiResponse] = useState("Hello! I'm Professor Lucy! Are you ready to do some science? Just drag and drop chemicals from the inventory to the containers!");
     const [isThinking, setIsThinking] = useState(false);
     const [inventoryOpen, setInventoryOpen] = useState(true);
+    const [equipmentOpen, setEquipmentOpen] = useState(true);
 
     const handleAnalyze = async (query: string | React.MouseEvent) => {
         setIsThinking(true);
         // Create a clean state object for the AI
-        const cleanState = beakers.map(c => ({
+        const cleanState = containers.map(c => ({
             id: c.id,
             volume: c.volume,
             pH: c.ph.toFixed(1),
@@ -91,15 +92,48 @@ const UIOverlay: React.FC = () => {
                     </button>
                 </div>
 
+                {/* Equipment Sidebar (Draggable Containers) */}
+                <div className="bg-[#1f2335] rounded-xl flex flex-col shadow-2xl border border-slate-700/50 overflow-hidden mt-2">
+                    <div className="px-4 py-3 border-b border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => setEquipmentOpen(!equipmentOpen)}>
+                        <h2 className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">EQUIPMENT</h2>
+                        <span className="text-slate-400 text-xs">{equipmentOpen ? '▼' : '▶'}</span>
+                    </div>
+
+                    {equipmentOpen && (
+                        <div className="p-3 flex flex-col gap-2">
+                            <div
+                                draggable
+                                onDragStart={(e) => {
+                                    e.dataTransfer.setData('containerType', 'beaker');
+                                }}
+                                className="reagent-btn flex justify-between items-center p-3 rounded-lg text-left"
+                            >
+                                <span className="text-sm font-bold text-slate-200">Empty Beaker</span>
+                                <span className="text-xl">🫙</span>
+                            </div>
+                            <div
+                                draggable
+                                onDragStart={(e) => {
+                                    e.dataTransfer.setData('containerType', 'flask');
+                                }}
+                                className="reagent-btn flex justify-between items-center p-3 rounded-lg text-left"
+                            >
+                                <span className="text-sm font-bold text-slate-200">Empty Flask</span>
+                                <span className="text-xl">⚗️</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 {/* Inventory Sidebar (Now Draggable Reagents) */}
                 <div className="bg-[#1f2335] rounded-xl flex flex-col shadow-2xl border border-slate-700/50 overflow-hidden mt-2">
                     <div className="px-4 py-3 border-b border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => setInventoryOpen(!inventoryOpen)}>
-                        <h2 className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">INVENTORY</h2>
+                        <h2 className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">REAGENTS</h2>
                         <span className="text-slate-400 text-xs">{inventoryOpen ? '▼' : '▶'}</span>
                     </div>
 
                     {inventoryOpen && (
-                        <div className="p-3 flex flex-col gap-2 overflow-y-auto custom-scrollbar h-[35vh]">
+                        <div className="p-3 flex flex-col gap-2 overflow-y-auto custom-scrollbar h-[25vh]">
                             {Object.values(CHEMICAL_REGISTRY).map(chem => (
                                 <div
                                     key={chem.id}
@@ -139,8 +173,8 @@ const UIOverlay: React.FC = () => {
                 <div className="w-[380px] glass-panel rounded-2xl flex flex-col shadow-2xl overflow-hidden">
                     {/* Chat Header */}
                     <div className="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3 bg-[#1a1d2d]">
-                        <div className="w-10 h-10 rounded-lg bg-orange-200 overflow-hidden flex items-center justify-center border border-slate-600">
-                            <span className="text-2xl">🦊</span>
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center border border-slate-600 bg-slate-800">
+                            <img src="/lucy_avatar.png" alt="Prof. Lucy" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex flex-col">
                             <h2 className="text-sm font-bold text-white">Commlink - PROF. LUCY</h2>
