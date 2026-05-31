@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { CHEMICAL_REGISTRY, REACTION_RULES } from '../data/ChemicalRegistry';
 
+
+export type AppState = 'MENU' | 'LOADING' | 'WORKBENCH';
+
 export interface Container {
     id: number;
     type: 'beaker' | 'flask';
@@ -12,6 +15,8 @@ export interface Container {
 }
 
 interface SimulationState {
+    appState: AppState;
+    setAppState: (state: AppState) => void;
     env: { temp: number; pressure: number };
     containers: Container[];
     activeEffect: 'bubbles' | 'smoke' | 'fire' | 'explosion' | 'fizz' | 'cloud' | null;
@@ -42,6 +47,8 @@ const hexToRgb = (hex: string) => {
 };
 
 export const useSimulationStore = create<SimulationState>((set, get) => ({
+    appState: 'MENU',
+    setAppState: (appState) => set({ appState }),
     env: { temp: 25, pressure: 1.0 },
     containers: [],
     activeEffect: null,
