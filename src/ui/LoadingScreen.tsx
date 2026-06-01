@@ -73,7 +73,7 @@ const LoadingScreen: React.FC = () => {
       } else {
         clearInterval(interval);
       }
-    }, 50); // Typing speed
+    }, 35); // Typing speed
 
     return () => clearInterval(interval);
   }, [phraseIndex]);
@@ -87,7 +87,7 @@ const LoadingScreen: React.FC = () => {
 
     const phraseSwitchInterval = setInterval(() => {
       setPhraseIndex(prev => (prev + 1) % loadingPhrases.length);
-    }, 1200);
+    }, 1500); // Increased interval to allow text to finish typing
 
     const timer = setInterval(() => {
       currentStep++;
