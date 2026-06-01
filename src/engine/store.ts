@@ -22,12 +22,17 @@ interface SimulationState {
     activeEffect: 'bubbles' | 'smoke' | 'fire' | 'explosion' | 'fizz' | 'cloud' | null;
     activeEffectContainerId: number | null;
 
+    // Reaction Popup
+    pendingReaction: any | null;
+    resolvePendingReaction: () => void;
+
     // Actions
     initialize: () => void;
     setEnvTemp: (temp: number) => void;
     setEnvPressure: (pressure: number) => void;
     spawnContainer: (type: 'beaker' | 'flask') => void;
     addReagentToContainer: (containerId: number, reagentId: string) => void;
+    pourContainer: (sourceId: number, targetId: number, heightDiff: number) => void;
     flushAll: () => void;
     clearEffect: () => void;
 }
@@ -53,6 +58,21 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
     containers: [],
     activeEffect: null,
     activeEffectContainerId: null,
+    pendingReaction: null,
+
+    resolvePendingReaction: () => {
+        const state = get();
+        if (state.pendingReaction) {
+            set({
+                activeEffect: state.pendingReaction.effect,
+                activeEffectContainerId: state.pendingReaction.containerId,
+                pendingReaction: null
+            });
+            setTimeout(() => {
+                 get().clearEffect();
+            }, 3000);
+        }
+    },
 
     initialize: () => {
         set({ containers: [], env: { temp: 25, pressure: 1.0 } });
@@ -130,44 +150,201 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
         if(container.ph > 14) container.ph = 14;
         if(container.ph < 0) container.ph = 0;
 
-        // 4.2 Check for Reactions
-        let newEffect: any = null;
-        const has = (id: string) => container.contents[id] > 0;
+        // 4.2 Dynamic Reaction Rules Engine
+        let triggeredReaction: any = null;
 
-        // Reaction 1: Acid + Base
-        if (has('HCl') && has('NaOH') && !container.contents['reacted_neutral']) {
-            newEffect = 'bubbles';
-            container.contents['reacted_neutral'] = 1;
+        for (const rule of REACTION_RULES) {
+            const hasBase = container.contents[rule.reactants[0]] > 0;
+            const hasAdded = reagentId === rule.reactants[1]; // Dropped reagent
+
+            // If order matters, we strictly check base vs added
+            if (rule.orderMatters) {
+                if (hasBase && hasAdded && !container.contents[`reacted_${rule.reactants[0]}_${rule.reactants[1]}`]) {
+                    triggeredReaction = rule;
+                    container.contents[`reacted_${rule.reactants[0]}_${rule.reactants[1]}`] = 1;
+                    break;
+                }
+            } else {
+                // Order doesn't matter, just check if both are present
+                const hasA = container.contents[rule.reactants[0]] > 0;
+                const hasB = container.contents[rule.reactants[1]] > 0;
+
+                // Trigger if dropping either reactant into a container with the other
+                if ((hasA && reagentId === rule.reactants[1]) || (hasB && reagentId === rule.reactants[0])) {
+                    if (!container.contents[`reacted_${rule.reactants[0]}_${rule.reactants[1]}`]) {
+                        triggeredReaction = rule;
+                        container.contents[`reacted_${rule.reactants[0]}_${rule.reactants[1]}`] = 1;
+                        break;
+                    }
+                }
+            }
         }
 
-        // Reaction 2: CuSO4 + NaOH (Copper Hydroxide Precipitate)
-        if (has('COPPER_SULFATE') && has('NaOH') && !container.contents['reacted_cuoh']) {
-            container.color = {r: 20, g: 60, b: 200}; // Force color to deep blue
-            newEffect = 'cloud';
-            container.contents['reacted_cuoh'] = 1;
-        }
-
-        // Phenolphthalein + NaOH
-        if (has('PHENOLPHTHALEIN') && has('NaOH') && !container.contents['reacted_pink']) {
-            container.color = {r: 244, g: 114, b: 182}; // Force color to pink
-            newEffect = 'fizz';
-            container.contents['reacted_pink'] = 1;
+        // Handle visual overrides like Phenolphthalein pink or Copper Precipitate
+        if (triggeredReaction) {
+            if (triggeredReaction.product === 'PINK_BASE') {
+                container.color = {r: 244, g: 114, b: 182};
+            }
+            if (triggeredReaction.product === 'COPPER_HYDROXIDE') { // Assuming we add this rule later
+                container.color = {r: 20, g: 60, b: 200};
+            }
         }
 
         containers[containerIndex] = container;
 
-        set({
-            containers,
-            ...(newEffect && {
-                activeEffect: newEffect,
-                activeEffectContainerId: containerId
-            })
-        });
+        if (triggeredReaction && triggeredReaction.requiresPopup) {
+            set({
+                containers,
+                pendingReaction: {
+                    ...triggeredReaction,
+                    containerId
+                }
+            });
+        } else {
+            set({
+                containers,
+                ...(triggeredReaction?.effect && {
+                    activeEffect: triggeredReaction.effect,
+                    activeEffectContainerId: containerId
+                })
+            });
 
-        if (newEffect) {
-             setTimeout(() => {
-                 get().clearEffect();
-             }, 3000);
+            if (triggeredReaction?.effect) {
+                 setTimeout(() => {
+                     get().clearEffect();
+                 }, 3000);
+            }
+        }
+    },
+
+    pourContainer: (sourceId: number, targetId: number, heightDiff: number) => {
+        const state = get();
+        const containers = [...state.containers];
+
+        const sourceIdx = containers.findIndex(c => c.id === sourceId);
+        const targetIdx = containers.findIndex(c => c.id === targetId);
+
+        if (sourceIdx === -1 || targetIdx === -1) return;
+
+        const source = { ...containers[sourceIdx], contents: { ...containers[sourceIdx].contents } };
+        const target = { ...containers[targetIdx], contents: { ...containers[targetIdx].contents } };
+
+        if (source.volume <= 0) return;
+        if (target.volume >= target.maxVol) return;
+
+        // Determine pour amount. Base rate is 1ml per tick, scales up.
+        const safeHeight = Math.max(0, Math.min(heightDiff, 500));
+        const pourRate = 1 + (safeHeight / 500) * 5;
+
+        // Calculate actual amount to pour
+        const availableSpace = target.maxVol - target.volume;
+        const actualPour = Math.min(pourRate, source.volume, availableSpace);
+
+        if (actualPour <= 0) return;
+
+        // 1. Calculate color mixing for target
+        if (target.volume === 0) {
+            target.color = { ...source.color };
+        } else {
+            const tVol = target.volume + actualPour;
+            target.color = {
+                r: Math.round((target.color.r * target.volume + source.color.r * actualPour) / tVol),
+                g: Math.round((target.color.g * target.volume + source.color.g * actualPour) / tVol),
+                b: Math.round((target.color.b * target.volume + source.color.b * actualPour) / tVol)
+            };
+        }
+
+        // 2. Transfer contents proportionally
+        for (const [chemId, vol] of Object.entries(source.contents)) {
+            const ratio = vol / source.volume;
+            const transferredVol = ratio * actualPour;
+
+            // Remove from source
+            source.contents[chemId] -= transferredVol;
+            if (source.contents[chemId] <= 0.01) delete source.contents[chemId];
+
+            // Add to target
+            target.contents[chemId] = (target.contents[chemId] || 0) + transferredVol;
+        }
+
+        source.volume -= actualPour;
+        target.volume += actualPour;
+
+        // 3. Recalculate pH for target
+        let totalMolesH = 0;
+        let totalVol = 0;
+        for (const [id, vol] of Object.entries(target.contents)) {
+            const rg = CHEMICAL_REGISTRY[id];
+            if (!rg) continue;
+            const hConc = Math.pow(10, -rg.ph);
+            totalMolesH += hConc * vol;
+            totalVol += vol;
+        }
+        const avgHConc = totalMolesH / totalVol;
+        target.ph = -Math.log10(avgHConc);
+        if(target.ph > 14) target.ph = 14;
+        if(target.ph < 0) target.ph = 0;
+
+        containers[sourceIdx] = source;
+        containers[targetIdx] = target;
+
+        // Dynamic Reaction Rules Engine for Pouring
+        let triggeredReaction: any = null;
+
+        // Check if any newly mixed chemicals trigger a reaction
+        for (const rule of REACTION_RULES) {
+            const r0 = rule.reactants[0];
+            const r1 = rule.reactants[1];
+
+            if (rule.orderMatters) {
+                // Was r1 poured into r0?
+                if (target.contents[r0] > 0 && source.contents[r1] > 0 && !target.contents[`reacted_${r0}_${r1}`]) {
+                    triggeredReaction = rule;
+                    target.contents[`reacted_${r0}_${r1}`] = 1;
+                    break;
+                }
+            } else {
+                if (target.contents[r0] > 0 && source.contents[r1] > 0 && !target.contents[`reacted_${r0}_${r1}`]) {
+                    triggeredReaction = rule;
+                    target.contents[`reacted_${r0}_${r1}`] = 1;
+                    break;
+                }
+                if (target.contents[r1] > 0 && source.contents[r0] > 0 && !target.contents[`reacted_${r1}_${r0}`]) {
+                    triggeredReaction = rule;
+                    target.contents[`reacted_${r1}_${r0}`] = 1;
+                    break;
+                }
+            }
+        }
+
+        // Handle visual overrides like Phenolphthalein pink
+        if (triggeredReaction && triggeredReaction.product === 'PINK_BASE') {
+            target.color = {r: 244, g: 114, b: 182};
+        }
+
+        containers[sourceIdx] = source;
+        containers[targetIdx] = target;
+
+        if (triggeredReaction && triggeredReaction.requiresPopup) {
+            set({
+                containers,
+                pendingReaction: {
+                    ...triggeredReaction,
+                    containerId: targetId
+                }
+            });
+        } else {
+            // Splash effect if poured from high up and no other reaction overrides it
+            let newEffect = triggeredReaction?.effect || ((safeHeight > 250) ? 'fizz' : null);
+
+            set({
+                containers,
+                ...(newEffect && { activeEffect: newEffect, activeEffectContainerId: targetId })
+            });
+
+            if (newEffect) {
+                 setTimeout(() => get().clearEffect(), triggeredReaction ? 3000 : 300);
+            }
         }
     },
 

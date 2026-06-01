@@ -3,6 +3,7 @@ import LabCanvas from './engine/LabCanvas';
 import MainMenu from './ui/MainMenu';
 import LoadingScreen from './ui/LoadingScreen';
 import UIOverlay from './ui/UIOverlay';
+import ReactionPopup from './ui/ReactionPopup';
 import { useSimulationStore } from './engine/store';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <>
           <LabCanvas />
           <UIOverlay />
+          <ReactionPopup />
         </>
       )}
     </div>

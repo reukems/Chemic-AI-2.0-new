@@ -1,0 +1,10 @@
+--- src/ui/UIOverlay.tsx
++++ src/ui/UIOverlay.tsx
+@@ -46,6 +46,7 @@
+     const handleDragStart = (e: React.DragEvent, id: string) => {
+         e.dataTransfer.effectAllowed = 'copy';
+         e.dataTransfer.setData('text/plain', id);
++        e.dataTransfer.setData(`reagent-${id}`, 'true'); // Hack to make type readable in dragover
+     };
+
+     return (
