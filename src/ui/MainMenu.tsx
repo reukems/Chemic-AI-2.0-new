@@ -92,7 +92,10 @@ const MainMenu: React.FC = () => {
               <span className="text-emerald-500/80 font-mono text-sm tracking-[0.3em] uppercase">System Verified</span>
             </div>
 
-            <h1 className="text-[6rem] leading-none font-black tracking-tighter mb-4 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+            <h1
+              className="text-[6rem] leading-none font-black tracking-tighter mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 drop-shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+              style={{ backgroundSize: '200% 200%', animation: 'rgb-shift 5s ease infinite' }}
+            >
               CHEMIC<span className="text-emerald-500">_</span>AI
             </h1>
             <p className="text-gray-400/80 text-xl tracking-widest uppercase font-light border-l-2 border-emerald-500/50 pl-4">
