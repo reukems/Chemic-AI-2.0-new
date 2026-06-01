@@ -1,0 +1,62 @@
+--- src/ui/UIOverlay.tsx
++++ src/ui/UIOverlay.tsx
+@@ -21,6 +21,11 @@
+     };
+
+     const handleAnalyze = (query: string) => {
++        // Custom easter egg
++        if (query.toLowerCase().includes("miside")) {
++            setAiResponse("MISIDE? Oh... are you trying to escape, player? Just kidding! Let's focus on chemistry.");
++            return;
++        }
+         setIsThinking(true);
+         // Simulate API call to Gemini
+         setTimeout(() => {
+@@ -107,17 +112,38 @@
+                     {inventoryOpen && (
+                         <div className="p-2 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar h-[20vh]">
+                             {Object.values(CHEMICAL_REGISTRY).map(chem => (
++                                chem.type !== 'solid' && (
++                                    <div
++                                        key={chem.id}
++                                        draggable
++                                        onDragStart={(e) => handleDragStart(e, chem.id)}
++                                        className="reagent-btn flex justify-between items-center p-2 rounded-lg text-left"
++                                    >
++                                        <div className="flex flex-col">
++                                            <span className="text-xs font-bold text-slate-200">{chem.name.EN}</span>
++                                            <span className="text-[9px] text-slate-500 font-mono">{chem.formula}</span>
++                                        </div>
++                                        <div
++                                            className="reagent-dot !w-4 !h-4"
++                                            style={{ color: chem.color, backgroundColor: chem.color }}
++                                        />
++                                    </div>
++                                )
++                            ))}
++
++                            {/* Render Solids separately with a visual distinction */}
++                            {Object.values(CHEMICAL_REGISTRY).map(chem => (
++                                chem.type === 'solid' && (
+                                 <div
+                                     key={chem.id}
+                                     draggable
+                                     onDragStart={(e) => handleDragStart(e, chem.id)}
+-                                    className="reagent-btn flex justify-between items-center p-2 rounded-lg text-left"
++                                    className="reagent-btn flex justify-between items-center p-2 rounded-lg text-left border-dashed border-orange-500/30 hover:border-orange-500/60"
+                                 >
+                                     <div className="flex flex-col">
+-                                        <span className="text-xs font-bold text-slate-200">{chem.name.EN}</span>
++                                        <span className="text-xs font-bold text-orange-200">{chem.name.EN} (Solid)</span>
+                                         <span className="text-[9px] text-slate-500 font-mono">{chem.formula}</span>
+                                     </div>
+-                                    <div
+-                                        className="reagent-dot !w-4 !h-4"
+-                                        style={{ color: chem.color, backgroundColor: chem.color }}
+-                                    />
++                                    <span className="text-lg">🪨</span>
+                                 </div>
++                                )
+                             ))}
+                         </div>
+                     )}

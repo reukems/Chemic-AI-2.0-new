@@ -46,7 +46,6 @@ const UIOverlay: React.FC = () => {
     const handleDragStart = (e: React.DragEvent, id: string) => {
         e.dataTransfer.effectAllowed = 'copy';
         e.dataTransfer.setData('text/plain', id);
-        e.dataTransfer.setData(`reagent-${id}`, 'true'); // Hack to make type readable in dragover
     };
 
     return (

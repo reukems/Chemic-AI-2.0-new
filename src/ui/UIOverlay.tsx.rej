@@ -1,0 +1,10 @@
+--- UIOverlay.tsx
++++ UIOverlay.tsx
+@@ -99,6 +99,7 @@
+
+     const handleDragStart = (e: React.DragEvent, chemId: string) => {
+         e.dataTransfer.setData('text/plain', chemId);
++        e.dataTransfer.setData(`reagent-${chemId}`, 'true'); // Hack to make type readable in dragover
+     };
+
+     return (

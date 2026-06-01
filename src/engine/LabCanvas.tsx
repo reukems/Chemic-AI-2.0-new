@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import LabContainer from './LabContainer';
 import { useSimulationStore } from './store';
 import PeriodicTableBoard from '../ui/PeriodicTableBoard';
@@ -14,6 +14,8 @@ const LabCanvas: React.FC = () => {
             e.dataTransfer.dropEffect = 'copy';
         }
     };
+
+    const [draggingContainerId, setDraggingContainerId] = useState<number | null>(null);
 
     const handleDrop = (e: React.DragEvent) => {
         const containerType = e.dataTransfer.getData('containerType');
@@ -33,10 +35,16 @@ const LabCanvas: React.FC = () => {
             <PeriodicTableBoard />
 
             <div className="relative z-10 flex gap-24 items-end pointer-events-none">
-                {/* Make containers pointer-events-auto so they can still be interacted with over the board */}
+                                {/* Make containers pointer-events-auto so they can still be interacted with over the board */}
                 {containers.map(c => (
                     <div key={c.id} className="pointer-events-auto">
-                        <LabContainer id={c.id} />
+                        <LabContainer
+                            id={c.id}
+                            isDragging={draggingContainerId === c.id}
+                            onDragStart={() => setDraggingContainerId(c.id)}
+                            onDragEnd={() => setDraggingContainerId(null)}
+                            draggingContainerId={draggingContainerId}
+                        />
                     </div>
                 ))}
             </div>
