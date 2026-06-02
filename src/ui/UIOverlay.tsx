@@ -11,9 +11,9 @@ const UIOverlay: React.FC = () => {
     const [userInput, setUserInput] = useState("");
     const [aiResponse, setAiResponse] = useState("Hello! I'm Professor Lucy! Are you ready to do some science? Just drag and drop chemicals from the inventory to the containers!");
     const [isThinking, setIsThinking] = useState(false);
+    const [isChatExpanded, setIsChatExpanded] = useState(true);
     const [inventoryOpen, setInventoryOpen] = useState(true);
     const [equipmentOpen, setEquipmentOpen] = useState(true);
-    const [isChatExpanded, setIsChatExpanded] = useState(true);
 
     const handleAnalyze = async (query: string | React.MouseEvent) => {
         setIsThinking(true);
