@@ -1,0 +1,33 @@
+--- src/engine/LabContainer.tsx
++++ src/engine/LabContainer.tsx
+@@ -1,5 +1,6 @@
+ import React, { useEffect, useRef } from 'react';
+ import { useSimulationStore } from './store';
++import { CHEMICAL_REGISTRY } from '../data/ChemicalRegistry';
+
+ interface LabContainerProps {
+     id: number;
+@@ -15,10 +16,19 @@
+
+     // Drag and Drop Logic
+     const handleDragOver = (e: React.DragEvent) => {
+-        e.preventDefault();
+-        e.dataTransfer.dropEffect = 'copy';
+-        e.currentTarget.classList.add('drag-over');
++        const reagentId = e.dataTransfer.types.find(type => type.startsWith('reagent-'));
++        if (reagentId) {
++            const cleanId = reagentId.replace('reagent-', '');
++            const chemical = CHEMICAL_REGISTRY[cleanId];
++            // Prevent dropping solids into flasks
++            if (chemical && chemical.type === 'solid' && container?.type === 'flask') {
++                e.dataTransfer.dropEffect = 'none';
++                return;
++            }
++        }
+
++        e.preventDefault();
++        e.dataTransfer.dropEffect = 'copy';
++        e.currentTarget.classList.add('drag-over');
+     };
+
+     const handleDragLeave = (e: React.DragEvent) => {

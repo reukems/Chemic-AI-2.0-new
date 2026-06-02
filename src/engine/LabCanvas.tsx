@@ -27,17 +27,15 @@ const LabCanvas: React.FC = () => {
 
     return (
         <div
-            className="flex-1 flex flex-col items-center justify-end relative w-full h-full"
+            className="flex-1 flex items-end justify-center gap-24 relative w-full h-full pb-[20%]"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
             {/* Background 2D Periodic Table Board */}
-            <div className="absolute inset-0 flex justify-center items-center pointer-events-none pb-[20%] z-0">
-                <PeriodicTableBoard />
-            </div>
+            <PeriodicTableBoard />
 
             <div className="relative z-10 flex gap-24 items-end pointer-events-none">
-                {/* Make containers pointer-events-auto so they can still be interacted with over the board */}
+                                {/* Make containers pointer-events-auto so they can still be interacted with over the board */}
                 {containers.map(c => (
                     <div key={c.id} className="pointer-events-auto">
                         <LabContainer
@@ -52,7 +50,7 @@ const LabCanvas: React.FC = () => {
             </div>
 
             {/* Solid Lab Desk Extending Downwards */}
-            <div className="relative w-3/4 h-[20%] desk-surface border-t-2 border-slate-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] rounded-t-2xl flex justify-center z-10">
+            <div className="absolute bottom-0 w-3/4 h-[20%] desk-surface border-t-2 border-slate-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] rounded-t-2xl flex justify-center z-10">
                 <div className="w-[95%] h-[2px] bg-cyan-500/30 mt-1"></div>
             </div>
         </div>

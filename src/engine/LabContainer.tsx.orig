@@ -1,38 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSimulationStore } from './store';
 import { CHEMICAL_REGISTRY } from '../data/ChemicalRegistry';
 
 interface LabContainerProps {
     id: number;
-    isDragging?: boolean;
-    onDragStart?: () => void;
-    onDragEnd?: () => void;
-    draggingContainerId?: number | null;
 }
 
-const LabContainer: React.FC<LabContainerProps> = ({ id, isDragging, onDragStart, onDragEnd, draggingContainerId }) => {
+const LabContainer: React.FC<LabContainerProps> = ({ id }) => {
     const container = useSimulationStore(state => state.containers.find(b => b.id === id));
     const addReagentToContainer = useSimulationStore(state => state.addReagentToContainer);
-    const pourContainer = useSimulationStore(state => state.pourContainer);
     const activeEffect = useSimulationStore(state => state.activeEffect);
     const activeEffectContainerId = useSimulationStore(state => state.activeEffectContainerId);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particlesRef = useRef<any[]>([]);
     const animationRef = useRef<number>();
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [isHoveredByAnother, setIsHoveredByAnother] = useState(false);
-    const pourIntervalRef = useRef<any>(null);
 
     // Drag and Drop Logic
     const handleDragOver = (e: React.DragEvent) => {
-        if (e.dataTransfer.types.includes('containerid')) {
-            // It's a container being dragged over us
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'none'; // We don't "drop" containers into containers, we pour on hover
-            return;
-        }
-
         // Need to check if it's a solid trying to go into a flask
         // Since drag events don't easily let us read text data during dragOver for security reasons,
         // we will handle the actual blocking in handleDrop, but we can set the drop effect here
@@ -70,83 +55,6 @@ const LabContainer: React.FC<LabContainerProps> = ({ id, isDragging, onDragStart
         }
     };
 
-    // Container Dragging
-    const handleContainerDragStart = (e: React.DragEvent) => {
-        if (container?.volume === 0) {
-            // Can't pour an empty container
-            e.preventDefault();
-            return;
-        }
-        e.dataTransfer.setData('containerid', id.toString());
-
-        // Hide standard drag image so we can move the actual div
-        const img = new Image();
-        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-        e.dataTransfer.setDragImage(img, 0, 0);
-
-        if (onDragStart) onDragStart();
-    };
-
-    const handleContainerDragEnd = (e: React.DragEvent) => {
-        if (onDragEnd) onDragEnd();
-    };
-
-    // Pouring logic
-    const handlePourMouseDown = (e: React.MouseEvent) => {
-        // If someone is dragging a container and mouses down on US, they want to pour
-        if (draggingContainerId !== null && draggingContainerId !== id) {
-            // Calculate height diff (very roughly based on Y mouse pos within our div, though usually we measure absolute div positions)
-            const rect = e.currentTarget.getBoundingClientRect();
-            const heightDiff = e.clientY - rect.top; // Higher up on the beaker = less diff, deeper = more diff
-
-            // In a real implementation we'd track continuous mouse down. For simplicity, let's use an interval
-            if (pourIntervalRef.current) clearInterval(pourIntervalRef.current);
-            pourIntervalRef.current = setInterval(() => {
-                pourContainer(draggingContainerId, id, 500 - Math.min(e.clientY, 500));
-            }, 100);
-        }
-    };
-
-    const handlePourMouseUp = () => {
-        if (pourIntervalRef.current) {
-            clearInterval(pourIntervalRef.current);
-            pourIntervalRef.current = null;
-        }
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (isDragging && containerRef.current) {
-                containerRef.current.style.position = 'fixed';
-                containerRef.current.style.left = `${e.clientX - 60}px`;
-                containerRef.current.style.top = `${e.clientY - 100}px`;
-                containerRef.current.style.zIndex = '100';
-                containerRef.current.style.pointerEvents = 'none'; // pass events to target underneath
-                containerRef.current.style.transform = 'rotate(-30deg)';
-                containerRef.current.style.transition = 'none'; // remove smooth transition while dragging
-            } else if (!isDragging && containerRef.current) {
-                containerRef.current.style.position = 'relative';
-                containerRef.current.style.left = 'auto';
-                containerRef.current.style.top = 'auto';
-                containerRef.current.style.zIndex = '10';
-                containerRef.current.style.pointerEvents = 'auto';
-                containerRef.current.style.transform = 'none';
-                containerRef.current.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            }
-        };
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            // Also listen to global mouse up to stop pouring if dragged off
-            window.addEventListener('mouseup', handlePourMouseUp);
-        }
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handlePourMouseUp);
-        };
-    }, [isDragging]);
-
     // Particle Effects
     useEffect(() => {
         if (activeEffectContainerId === id && activeEffect) {
@@ -157,63 +65,22 @@ const LabContainer: React.FC<LabContainerProps> = ({ id, isDragging, onDragStart
             const g = container?.color.g || 255;
             const b = container?.color.b || 255;
 
-            let numParticles = 15;
-            let isExplosion = activeEffect === 'explosion';
-
-            if (isExplosion) {
-                numParticles = 200; // Massive particle count for explosion
-                // Screen shake effect on the container wrapper
-                if (containerRef.current) {
-                    containerRef.current.animate([
-                        { transform: 'translate(0px, 0px) rotate(0deg)' },
-                        { transform: 'translate(-10px, 5px) rotate(-2deg)' },
-                        { transform: 'translate(10px, -5px) rotate(2deg)' },
-                        { transform: 'translate(-5px, -10px) rotate(-1deg)' },
-                        { transform: 'translate(5px, 10px) rotate(1deg)' },
-                        { transform: 'translate(0px, 0px) rotate(0deg)' }
-                    ], { duration: 500, easing: 'ease-in-out' });
-                }
-            } else if (activeEffect === 'fizz') {
-                numParticles = 40;
-            } else if (activeEffect === 'bubbles') {
-                numParticles = 25;
-            }
+            const numParticles = activeEffect === 'fizz' ? 30 : 15;
 
             for(let i=0; i<numParticles; i++) {
-                let color = `rgba(${Math.min(255, r+50)}, ${Math.min(255, g+50)}, ${Math.min(255, b+50)}, ${0.5 + Math.random()*0.5})`;
-                let vx = (Math.random() - 0.5) * 2;
-                let vy = -(1 + Math.random() * 3);
-                let radius = 1 + Math.random() * 3;
-                let decay = 0.01 + Math.random() * 0.02;
-
-                if (isExplosion) {
-                    // Fire colors: red, orange, yellow, white
-                    const fireR = 255;
-                    const fireG = Math.floor(Math.random() * 200);
-                    const fireB = Math.floor(Math.random() * 50);
-                    color = `rgba(${fireR}, ${fireG}, ${fireB}, ${0.8 + Math.random()*0.2})`;
-
-                    // Explosive velocity
-                    vx = (Math.random() - 0.5) * 15;
-                    vy = -(5 + Math.random() * 20); // Blast upwards
-                    radius = 2 + Math.random() * 6;
-                    decay = 0.02 + Math.random() * 0.05; // Fade faster
-                }
-
                 particlesRef.current.push({
-                    x: isExplosion ? canvas.width/2 : Math.random() * canvas.width, // Explosions originate from center
-                    y: canvas.height - (container.volume / container.maxVol) * canvas.height, // Originate from liquid surface
-                    vy,
-                    vx,
-                    radius,
-                    color,
+                    x: Math.random() * canvas.width,
+                    y: canvas.height,
+                    vy: -(1 + Math.random() * 2),
+                    vx: (Math.random() - 0.5) * 0.5,
+                    radius: 1 + Math.random() * 3,
+                    color: `rgba(${Math.min(255, r+50)}, ${Math.min(255, g+50)}, ${Math.min(255, b+50)}, ${0.5 + Math.random()*0.5})`,
                     life: 1.0,
-                    decay,
-                    isExplosion
+                    decay: 0.01 + Math.random() * 0.02
                 });
             }
         }
-    }, [activeEffect, activeEffectContainerId, id, container?.color, container?.volume, container?.maxVol]);
+    }, [activeEffect, activeEffectContainerId, id, container?.color]);
 
     // Particle Animation Loop
     useEffect(() => {
@@ -242,30 +109,15 @@ const LabContainer: React.FC<LabContainerProps> = ({ id, isDragging, onDragStart
                 p.x += p.vx;
                 p.y += p.vy;
                 p.life -= p.decay;
+                p.x += Math.sin(p.y * 0.1) * 0.5;
 
-                if (!p.isExplosion) {
-                    p.x += Math.sin(p.y * 0.1) * 0.5; // Wobble for bubbles
-                } else {
-                    p.vy += 0.5; // Gravity for explosion debris
-                    p.radius *= 0.95; // Shrink fire particles
-                }
-
-                if (p.life > 0 && p.radius > 0.5) {
+                if (p.life > 0) {
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                     ctx.fillStyle = p.color;
                     ctx.globalAlpha = p.life;
-
-                    if (p.isExplosion) {
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = p.color;
-                    } else {
-                        ctx.shadowBlur = 0;
-                    }
-
                     ctx.fill();
                     ctx.globalAlpha = 1.0;
-                    ctx.shadowBlur = 0;
                 } else {
                     particles.splice(i, 1);
                 }
@@ -291,14 +143,7 @@ const LabContainer: React.FC<LabContainerProps> = ({ id, isDragging, onDragStart
 
     return (
         <div
-            ref={containerRef}
-            draggable
-            onDragStart={handleContainerDragStart}
-            onDragEnd={handleContainerDragEnd}
-            onMouseDown={handlePourMouseDown}
-            onMouseUp={handlePourMouseUp}
-            onMouseLeave={handlePourMouseUp}
-            className={`container-wrapper ${isFlask ? 'flask-wrapper' : 'beaker-wrapper'} ${isDragging ? 'opacity-80 scale-90' : ''}`}
+            className={`container-wrapper ${isFlask ? 'flask-wrapper' : 'beaker-wrapper'}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}

@@ -1,0 +1,107 @@
+--- src/engine/LabContainer.tsx
++++ src/engine/LabContainer.tsx
+@@ -4,6 +4,9 @@
+
+ interface LabContainerProps {
+     id: number;
++    isDragging?: boolean;
++    onDragStart?: () => void;
++    onDragEnd?: () => void;
+ }
+
+-const LabContainer: React.FC<LabContainerProps> = ({ id }) => {
++const LabContainer: React.FC<LabContainerProps> = ({ id, isDragging, onDragStart, onDragEnd }) => {
+     const container = useSimulationStore(state => state.containers.find(b => b.id === id));
+     const addReagentToContainer = useSimulationStore(state => state.addReagentToContainer);
++    const pourContainer = useSimulationStore(state => state.pourContainer);
+     const activeEffect = useSimulationStore(state => state.activeEffect);
+     const activeEffectContainerId = useSimulationStore(state => state.activeEffectContainerId);
+
+     const canvasRef = useRef<HTMLCanvasElement>(null);
+     const particlesRef = useRef<any[]>([]);
+     const animationRef = useRef<number>();
++    const containerRef = useRef<HTMLDivElement>(null);
++    const [isHoveredByAnother, setIsHoveredByAnother] = useState(false);
++    const pourIntervalRef = useRef<any>(null);
+
+     // Drag and Drop Logic
+     const handleDragOver = (e: React.DragEvent) => {
+@@ -34,6 +44,11 @@
+     };
+
+     const handleDragLeave = (e: React.DragEvent) => {
+         e.currentTarget.classList.remove('drag-over');
+     };
+
+@@ -51,6 +66,57 @@
+         }
+     };
+
++    // For Container-to-Container Pouring
++    const handleContainerDragStart = (e: React.DragEvent) => {
++        e.dataTransfer.setData('sourceContainerId', id.toString());
++        if (onDragStart) onDragStart();
++
++        // Hide the ghost image for a cleaner drag experience
++        const img = new Image();
++        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
++        e.dataTransfer.setDragImage(img, 0, 0);
++    };
++
++    const handleContainerDragEnd = (e: React.DragEvent) => {
++        if (onDragEnd) onDragEnd();
++    };
++
++    useEffect(() => {
++        const handleMouseMove = (e: MouseEvent) => {
++            // If WE are the one being dragged, follow the mouse
++            if (isDragging && containerRef.current) {
++                containerRef.current.style.position = 'fixed';
++                containerRef.current.style.left = `${e.clientX - 60}px`;
++                containerRef.current.style.top = `${e.clientY - 100}px`;
++                containerRef.current.style.zIndex = '100';
++                containerRef.current.style.pointerEvents = 'none'; // so we can hover over targets
++                containerRef.current.style.transform = 'rotate(-30deg)'; // Tilting to pour
++            } else if (!isDragging && containerRef.current) {
++                containerRef.current.style.position = 'relative';
++                containerRef.current.style.left = 'auto';
++                containerRef.current.style.top = 'auto';
++                containerRef.current.style.zIndex = '10';
++                containerRef.current.style.pointerEvents = 'auto';
++                containerRef.current.style.transform = 'none';
++            }
++        };
++
++        if (isDragging) {
++            window.addEventListener('mousemove', handleMouseMove);
++        }
++
++        return () => {
++            window.removeEventListener('mousemove', handleMouseMove);
++        };
++    }, [isDragging]);
++
+     // Particle Effects
+     useEffect(() => {
+         if (activeEffectContainerId === id && activeEffect) {
+@@ -149,11 +215,31 @@
+     const label = id === 0 ? 'Alpha' : id === 1 ? 'Beta' : id === 2 ? 'Gamma' : 'Delta';
+     const isFlask = container.type === 'flask';
+
++    // Let target containers handle mouse events when a source is being dragged globally over them
++    // Since dragged container has pointerEvents='none', the target receives mouse events
+     return (
+         <div
++            ref={containerRef}
++            draggable
++            onDragStart={handleContainerDragStart}
++            onDragEnd={handleContainerDragEnd}
+             className={`container-wrapper ${isFlask ? 'flask-wrapper' : 'beaker-wrapper'} ${isDragging ? 'opacity-80' : ''}`}
+             onDragOver={handleDragOver}
+             onDragLeave={handleDragLeave}
+             onDrop={handleDrop}
++            onMouseEnter={(e) => {
++                 // If someone is dragging but it's not us, we are the target
++            }}
+         >
+             <div className="container-info font-mono text-center">

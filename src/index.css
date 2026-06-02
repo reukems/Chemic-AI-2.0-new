@@ -225,13 +225,18 @@ body {
 /* Canvas for Bubbles/Reactions */
 .reaction-canvas {
   position: absolute;
-  bottom: 0px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 400px;
-  height: 600px;
-  z-index: 12;
+  bottom: 3px;
+  left: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  z-index: 8;
   pointer-events: none;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+.flask-canvas {
+    left: 0; width: 100%; bottom: 0; height: 100%;
+    clip-path: path("M 57 2 L 103 2 L 103 66 L 154 195 Q 157 203 149 211 Q 140 217 130 217 L 30 217 Q 20 217 11 211 Q 3 203 6 195 L 57 66 Z");
 }
 
 /* Info Popup */

@@ -1,0 +1,102 @@
+--- src/engine/store.ts
++++ src/engine/store.ts
+@@ -21,6 +21,7 @@
+     setEnvPressure: (pressure: number) => void;
+     spawnContainer: (type: 'beaker' | 'flask') => void;
+     addReagentToContainer: (containerId: number, reagentId: string) => void;
++    pourContainer: (sourceId: number, targetId: number, heightDiff: number) => void;
+     flushAll: () => void;
+     clearEffect: () => void;
+ }
+@@ -155,6 +156,92 @@
+         }
+     },
+
++    pourContainer: (sourceId: number, targetId: number, heightDiff: number) => {
++        const state = get();
++        const containers = [...state.containers];
++
++        const sourceIdx = containers.findIndex(c => c.id === sourceId);
++        const targetIdx = containers.findIndex(c => c.id === targetId);
++
++        if (sourceIdx === -1 || targetIdx === -1) return;
++
++        const source = { ...containers[sourceIdx], contents: { ...containers[sourceIdx].contents } };
++        const target = { ...containers[targetIdx], contents: { ...containers[targetIdx].contents } };
++
++        if (source.volume <= 0) return;
++        if (target.volume >= target.maxVol) return;
++
++        // Determine pour amount. If high up, pour faster. Base rate is 5ml.
++        // Cap the heightDiff for safety, let's say between 0 and 500px.
++        const safeHeight = Math.max(0, Math.min(heightDiff, 500));
++        const pourRate = 5 + (safeHeight / 500) * 15; // 5ml to 20ml per tick
++
++        // Calculate actual amount to pour (can't pour more than we have, or more than target can fit)
++        const availableSpace = target.maxVol - target.volume;
++        const actualPour = Math.min(pourRate, source.volume, availableSpace);
++
++        if (actualPour <= 0) return;
++
++        // 1. Calculate color mixing for target
++        if (target.volume === 0) {
++            target.color = { ...source.color };
++        } else {
++            const tVol = target.volume + actualPour;
++            target.color = {
++                r: Math.round((target.color.r * target.volume + source.color.r * actualPour) / tVol),
++                g: Math.round((target.color.g * target.volume + source.color.g * actualPour) / tVol),
++                b: Math.round((target.color.b * target.volume + source.color.b * actualPour) / tVol)
++            };
++        }
++
++        // 2. Transfer contents proportionally
++        for (const [chemId, vol] of Object.entries(source.contents)) {
++            const ratio = vol / source.volume;
++            const transferredVol = ratio * actualPour;
++
++            // Remove from source
++            source.contents[chemId] -= transferredVol;
++            if (source.contents[chemId] <= 0.01) delete source.contents[chemId];
++
++            // Add to target
++            target.contents[chemId] = (target.contents[chemId] || 0) + transferredVol;
++        }
++
++        source.volume -= actualPour;
++        target.volume += actualPour;
++
++        // 3. Recalculate pH for target
++        let totalMolesH = 0;
++        let totalVol = 0;
++        for (const [id, vol] of Object.entries(target.contents)) {
++            const rg = CHEMICAL_REGISTRY[id];
++            if (!rg) continue;
++            const hConc = Math.pow(10, -rg.ph);
++            totalMolesH += hConc * vol;
++            totalVol += vol;
++        }
++        const avgHConc = totalMolesH / totalVol;
++        target.ph = -Math.log10(avgHConc);
++        if(target.ph > 14) target.ph = 14;
++        if(target.ph < 0) target.ph = 0;
++
++        containers[sourceIdx] = source;
++        containers[targetIdx] = target;
++
++        // Effect? Maybe a minor splash or bubbles if it's pouring fast
++        let newEffect = (safeHeight > 300) ? 'fizz' as const : null;
++
++        set({
++            containers,
++            ...(newEffect && { activeEffect: newEffect, activeEffectContainerId: targetId })
++        });
++
++        if (newEffect) {
++             setTimeout(() => get().clearEffect(), 500);
++        }
++    },
++
+     flushAll: () => {
+         set({ containers: [], activeEffect: null, activeEffectContainerId: null });
+     },

@@ -1,0 +1,16 @@
+<<<<<<< SEARCH
+        reactants: ['SODIUM', 'H2O'],
+        product: 'NaOH',
+        message: { EN: 'Violent exothermic reaction! Sodium reacts with water to form Hydrogen gas and Sodium Hydroxide.', VN: 'Phản ứng tỏa nhiệt mạnh! Natri phản ứng với nước tạo khí Hydro và Natri Hydroxit.' },
+        effect: 'explosion',
+        temperatureSpike: 80
+    },
+=======
+        reactants: ['SODIUM', 'H2O'],
+        product: 'NaOH',
+        message: { EN: 'Violent exothermic reaction! Sodium reacts with water to form Hydrogen gas and Sodium Hydroxide.', VN: 'Phản ứng tỏa nhiệt mạnh! Natri phản ứng với nước tạo khí Hydro và Natri Hydroxit.' },
+        effect: 'explosion',
+        temperatureSpike: 80,
+        requiresPopup: true
+    },
+>>>>>>> REPLACE

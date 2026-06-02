@@ -1,0 +1,13 @@
+--- LabContainer.tsx
++++ LabContainer.tsx
+@@ -4,6 +4,9 @@
+
+ interface LabContainerProps {
+     id: number;
++    isDragging?: boolean;
++    onDragStart?: () => void;
++    onDragEnd?: () => void;
+ }
+
+-const LabContainer: React.FC<LabContainerProps> = ({ id }) => {
++const LabContainer: React.FC<LabContainerProps> = ({ id, isDragging, onDragStart, onDragEnd }) => {
