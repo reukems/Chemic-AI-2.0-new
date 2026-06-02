@@ -13,6 +13,7 @@ const UIOverlay: React.FC = () => {
     const [isThinking, setIsThinking] = useState(false);
     const [inventoryOpen, setInventoryOpen] = useState(true);
     const [equipmentOpen, setEquipmentOpen] = useState(true);
+    const [isChatExpanded, setIsChatExpanded] = useState(true);
 
     const handleAnalyze = async (query: string | React.MouseEvent) => {
         setIsThinking(true);
@@ -197,58 +198,69 @@ const UIOverlay: React.FC = () => {
             <div className="absolute bottom-6 right-6 pointer-events-auto">
                 <div className="w-[380px] glass-panel rounded-2xl flex flex-col shadow-2xl overflow-hidden">
                     {/* Chat Header */}
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3 bg-[#1a1d2d]">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center border border-slate-600 bg-slate-800">
-                            <img src="/lucy_avatar.png" alt="Prof. Lucy" className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex flex-col">
-                            <h2 className="text-sm font-bold text-white">Commlink - PROF. LUCY</h2>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 text-emerald-500" style={{ animation: 'pulse-sync 2s infinite' }}></div>
-                                <span className="text-[9px] font-bold text-emerald-500 tracking-widest uppercase">ONLINE</span>
+                    <div
+                        className="px-4 py-3 border-b border-slate-700/50 flex items-center justify-between gap-3 bg-[#1a1d2d] cursor-pointer hover:bg-slate-800 transition-colors"
+                        onClick={() => setIsChatExpanded(!isChatExpanded)}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center border border-slate-600 bg-slate-800">
+                                <img src="/lucy_avatar.png" alt="Prof. Lucy" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex flex-col">
+                                <h2 className="text-sm font-bold text-white">Commlink - PROF. LUCY</h2>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 text-emerald-500" style={{ animation: 'pulse-sync 2s infinite' }}></div>
+                                    <span className="text-[9px] font-bold text-emerald-500 tracking-widest uppercase">ONLINE</span>
+                                </div>
                             </div>
                         </div>
+                        <span className="text-slate-400 text-xs">{isChatExpanded ? '▼' : '▲'}</span>
                     </div>
 
-                    {/* Chat Body */}
-                    <div className="p-5 text-sm text-slate-300 leading-relaxed min-h-[120px] bg-[#1f2335]/50">
-                        {isThinking ? (
-                            <span className="flex items-center gap-2 text-cyan-400">
-                                Typing
-                                <span className="flex gap-0.5">
-                                    <span className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
-                                    <span className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
-                                    <span className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
-                                </span>
-                            </span>
-                        ) : (
-                            <span className="whitespace-pre-wrap">{aiResponse}</span>
-                        )}
-                    </div>
+                    {/* Expandable content area */}
+                    <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${isChatExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="overflow-hidden">
+                            {/* Chat Body */}
+                            <div className="p-5 text-sm text-slate-300 leading-relaxed min-h-[120px] bg-[#1f2335]/50">
+                                {isThinking ? (
+                                    <span className="flex items-center gap-2 text-cyan-400">
+                                        Typing
+                                        <span className="flex gap-0.5">
+                                            <span className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                                            <span className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                                            <span className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+                                        </span>
+                                    </span>
+                                ) : (
+                                    <span className="whitespace-pre-wrap">{aiResponse}</span>
+                                )}
+                            </div>
 
-                    {/* Chat Input */}
-                    <div className="p-4 bg-[#1f2335]/50 border-t border-slate-700/50">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Enter query..."
-                                className="w-full bg-[#151824] border border-slate-700/50 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-colors"
-                                value={userInput}
-                                onChange={(e) => setUserInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                disabled={isThinking}
-                            />
-                            <button
-                                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#252b42] hover:bg-[#303755] rounded-lg flex items-center justify-center text-cyan-400 transition-colors"
-                                onClick={() => {
-                                    if(userInput.trim()) {
-                                        handleAnalyze(userInput);
-                                        setUserInput("");
-                                    }
-                                }}
-                            >
-                                <span className="text-xs">^</span>
-                            </button>
+                            {/* Chat Input */}
+                            <div className="p-4 bg-[#1f2335]/50 border-t border-slate-700/50">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Enter query..."
+                                        className="w-full bg-[#151824] border border-slate-700/50 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                        value={userInput}
+                                        onChange={(e) => setUserInput(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        disabled={isThinking}
+                                    />
+                                    <button
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#252b42] hover:bg-[#303755] rounded-lg flex items-center justify-center text-cyan-400 transition-colors"
+                                        onClick={() => {
+                                            if(userInput.trim()) {
+                                                handleAnalyze(userInput);
+                                                setUserInput("");
+                                            }
+                                        }}
+                                    >
+                                        <span className="text-xs">^</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
