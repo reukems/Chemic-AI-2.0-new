@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useSimulationStore } from '../engine/store';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSimulationStore } from '../engine/store';
 import CinematicBackground from './CinematicBackground';
 
 const MainMenu: React.FC = () => {
@@ -46,7 +46,7 @@ const MainMenu: React.FC = () => {
 
       {/* Z-10: Massive Character Sprite */}
       <motion.div
-        className="absolute bottom-0 right-0 h-screen w-[70vw] z-10 pointer-events-none origin-bottom"
+        className="absolute bottom-0 right-[2vw] w-[45vw] min-w-[600px] h-[95vh] z-10 pointer-events-none origin-bottom flex items-end justify-center"
         animate={{
             x: mousePos.x * -20,
             rotate: mousePos.x * 0.3
@@ -56,7 +56,7 @@ const MainMenu: React.FC = () => {
         <img
           src="/assets/lucy-transparent.png"
           alt="Professor Lucy"
-          className="absolute bottom-0 right-0 h-full w-full object-contain object-right-bottom drop-shadow-[-20px_0_50px_rgba(34,211,238,0.2)] pointer-events-none"
+          className="relative block h-[100%] w-auto object-contain object-bottom drop-shadow-[-20px_0_50px_rgba(34,211,238,0.2)] pointer-events-none"
           onError={(e) => {
              (e.target as HTMLImageElement).style.display = 'none';
           }}
@@ -71,7 +71,7 @@ const MainMenu: React.FC = () => {
       </motion.div>
 
       {/* Z-20: Left Control Panel */}
-      <div className="absolute left-[10vw] top-1/2 -translate-y-1/2 w-[400px] z-20 pointer-events-auto flex flex-col gap-8">
+      <div className="absolute left-[8vw] top-1/2 -translate-y-1/2 w-[400px] z-20 pointer-events-auto flex flex-col gap-8">
         {/* Header Box */}
         <div className="relative p-8 rounded-xl bg-slate-900/60 backdrop-blur-md border border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)] overflow-hidden">
           {/* Internal hex pattern */}
@@ -84,7 +84,7 @@ const MainMenu: React.FC = () => {
 
           <div className="relative z-10">
             <h2 className="text-cyan-400 font-mono text-sm tracking-[0.3em] mb-2">PROJECT INIT</h2>
-            <h1 className="text-[3.5rem] leading-[1] font-black tracking-tighter mb-4 uppercase text-[#00f3ff] drop-shadow-[0_0_15px_rgba(0,243,255,0.8)]">
+            <h1 className="text-5xl leading-[1] font-black tracking-tighter mb-4 uppercase text-[#00f3ff] drop-shadow-[0_0_15px_rgba(0,243,255,0.8)]">
               CHEMIC<span className="text-white">-</span>AI
             </h1>
             <div className="flex items-center gap-3">
@@ -101,7 +101,7 @@ const MainMenu: React.FC = () => {
           {/* START BUTTON */}
           <button
             onClick={handleStart}
-            className="group relative px-6 py-4 bg-cyan-950/40 border border-cyan-400 hover:bg-cyan-900/60 rounded-xl text-left transition-all duration-300 backdrop-blur-md shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+            className="group relative px-6 py-4 rounded-full text-left transition-all duration-300 backdrop-blur-md shadow-[0_0_20px_rgba(34,211,238,0.2)] bg-gradient-to-r from-cyan-950/40 to-cyan-900/40 border border-cyan-400 hover:from-cyan-900/60 hover:to-cyan-800/60"
           >
             <div className="relative z-10 flex items-center justify-between">
               <div>
@@ -116,31 +116,39 @@ const MainMenu: React.FC = () => {
             </div>
           </button>
 
-          {/* Pill-shaped active secondary buttons & Locked Story Mode */}
+          {/* Pill-shaped active secondary buttons */}
           <div className="flex flex-col gap-3 mt-2">
-            <button className="px-6 py-3 bg-slate-900/40 border border-[#00f3ff]/20 rounded-xl text-left backdrop-blur-sm flex items-center justify-between cursor-not-allowed opacity-60">
+            <button className="px-6 py-3 rounded-full bg-slate-900/40 border border-[#00f3ff]/20 text-left backdrop-blur-sm flex items-center justify-between cursor-not-allowed opacity-60">
               <div className="flex items-center gap-3">
                 <span className="text-[#00f3ff]/50 font-mono text-xs">01</span>
-                <span className="text-gray-400 font-bold tracking-wider uppercase text-sm">Story Mode</span>
+                <span className="text-gray-400 font-bold tracking-wider uppercase text-sm">STORY ARCHIVES</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-[#00f3ff]/60 font-mono tracking-widest uppercase">[COMING SOON]</span>
+                <span className="text-[10px] text-[#00f3ff]/60 font-mono tracking-widest uppercase">[LOCKED]</span>
                 <svg className="w-4 h-4 text-[#00f3ff]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
               </div>
             </button>
 
-            <button className="px-6 py-3 bg-slate-800/60 hover:bg-slate-700/80 border border-cyan-500/20 hover:border-[#00f3ff]/50 rounded-xl text-left transition-all duration-200 backdrop-blur-sm flex items-center justify-between group">
+            <button className="px-6 py-3 rounded-full bg-slate-800/60 hover:bg-slate-700/80 border border-cyan-500/20 hover:border-[#00f3ff]/50 text-left transition-all duration-200 backdrop-blur-sm flex items-center justify-between group">
               <div className="flex items-center gap-3">
                 <span className="text-[#00f3ff]/50 font-mono text-xs group-hover:text-[#00f3ff] transition-colors">02</span>
-                <span className="text-gray-300 font-bold tracking-wider uppercase text-sm group-hover:text-white transition-colors">Element Database</span>
+                <span className="text-gray-300 font-bold tracking-wider uppercase text-sm group-hover:text-white transition-colors">ELEMENT DATABASE</span>
               </div>
               <span className="text-[#00f3ff]/50 text-xs group-hover:text-[#00f3ff] transition-colors">→</span>
             </button>
 
-            <button className="px-6 py-3 bg-slate-800/60 hover:bg-slate-700/80 border border-cyan-500/20 hover:border-[#00f3ff]/50 rounded-xl text-left transition-all duration-200 backdrop-blur-sm flex items-center justify-between group">
+            <button className="px-6 py-3 rounded-full bg-slate-800/60 hover:bg-slate-700/80 border border-cyan-500/20 hover:border-[#00f3ff]/50 text-left transition-all duration-200 backdrop-blur-sm flex items-center justify-between group">
               <div className="flex items-center gap-3">
                 <span className="text-[#00f3ff]/50 font-mono text-xs group-hover:text-[#00f3ff] transition-colors">03</span>
-                <span className="text-gray-300 font-bold tracking-wider uppercase text-sm group-hover:text-white transition-colors">System Settings</span>
+                <span className="text-gray-300 font-bold tracking-wider uppercase text-sm group-hover:text-white transition-colors">SYSTEM SETTINGS</span>
+              </div>
+              <span className="text-[#00f3ff]/50 text-xs group-hover:text-[#00f3ff] transition-colors">→</span>
+            </button>
+
+            <button className="px-6 py-3 rounded-full bg-slate-800/60 hover:bg-slate-700/80 border border-cyan-500/20 hover:border-[#00f3ff]/50 text-left transition-all duration-200 backdrop-blur-sm flex items-center justify-between group">
+              <div className="flex items-center gap-3">
+                <span className="text-[#00f3ff]/50 font-mono text-xs group-hover:text-[#00f3ff] transition-colors">04</span>
+                <span className="text-gray-300 font-bold tracking-wider uppercase text-sm group-hover:text-white transition-colors">EXIT DESKTOP</span>
               </div>
               <span className="text-[#00f3ff]/50 text-xs group-hover:text-[#00f3ff] transition-colors">→</span>
             </button>
@@ -156,7 +164,7 @@ const MainMenu: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.3, type: "spring" }}
-            className="absolute bottom-12 right-[5vw] w-[450px] z-30 bg-[#05131f]/80 border-t border-l border-[#00f3ff]/50 p-6 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(0,243,255,0.1)] overflow-hidden pointer-events-auto"
+            className="absolute bottom-12 right-12 w-[400px] z-30 backdrop-blur-xl bg-[#010a12]/90 border border-[#00f3ff]/30 shadow-[0_10px_40px_rgba(0,0,0,0.8)] p-6 rounded-2xl overflow-hidden pointer-events-auto"
           >
             <div className="relative z-20">
                 <div className="flex items-center gap-4 mb-4">
