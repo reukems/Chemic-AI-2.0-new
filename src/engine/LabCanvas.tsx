@@ -27,7 +27,7 @@ const LabCanvas: React.FC = () => {
 
     return (
         <div
-            className="flex-1 flex items-end justify-center gap-24 relative w-full h-full pb-[20%]"
+            className="flex-1 flex items-end justify-center gap-24 relative w-full h-full pb-[20vh]"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
@@ -50,8 +50,8 @@ const LabCanvas: React.FC = () => {
             </div>
 
             {/* Solid Lab Desk Extending Downwards */}
-            <div className="absolute bottom-0 w-3/4 h-[20%] desk-surface border-t-2 border-slate-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] rounded-t-2xl flex justify-center z-10">
-                <div className="w-[95%] h-[2px] bg-cyan-500/30 mt-1"></div>
+            <div className="absolute bottom-0 w-full h-[20vh] desk-surface border-t-2 border-slate-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] flex justify-center z-10">
+                <div className="w-full h-[2px] bg-cyan-500/30 mt-1"></div>
             </div>
         </div>
     );
